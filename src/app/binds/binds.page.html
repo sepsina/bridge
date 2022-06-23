@@ -1,0 +1,134 @@
+<div id="dlg-head"
+     cdkDrag
+     cdkDragRootElement=".cdk-overlay-pane"
+     cdkDragBoundary=".cdk-overlay-container">
+    <div id="binds-title" cdkDragHandle>
+        binds
+    </div>
+    <button mat-icon-button (click)="close()">
+        <mat-icon>close</mat-icon>
+    </button>
+</div>
+
+<div class="binds-frame">
+    <div class="bind-container">
+        <div class="src-binds-container">
+            <div class="src-binds-header">
+                Source Binds
+            </div>
+            <mat-select class="src-binds-sel"
+                        [(value)]="bindSrc"
+                        (selectionChange)="bindSrcSelected($event)">
+                <mat-option *ngFor="let bind of allBindSrc" [value]="bind">
+                    {{bind.name}}
+                </mat-option>
+            </mat-select>
+            <div class="source-bind-desc">
+                <div *ngFor="let desc of bindSourceDesc">
+                    <span class="desc-label">{{desc.key}}</span><span class="desc-value">{{desc.value}}</span>
+                </div>
+            </div>
+            <div class="edit-binds">
+                <div class="edit-binds-name">
+                    <mat-form-field>
+                        <mat-label>Edit Name</mat-label>
+                        <input class="binds-name" type="text" matInput [formControl]="nameFormCtrl">
+                        <mat-hint align="end">set name for bind source</mat-hint>
+                        <mat-error *ngIf="nameFormCtrl.hasError('required')">
+                            Enter valid location
+                        </mat-error>
+                    </mat-form-field>
+                </div>
+                <div class="edit-binds-button">
+                    <button mat-stroked-button (click)="wrBindName()">Write</button>
+                </div>
+            </div>
+            <div class="used-binds-list">
+                <mat-selection-list [multiple]="false"
+                                    [(ngModel)]="usedBindDstListSelected"
+                                    (selectionChange)="usedBindDstChanged($event)">
+                    <mat-list-option class="binds-name"
+                                     *ngFor="let bindDst of usedBindDst"
+                                     [value]="bindDst"
+                                     [disabled]="!bindDst.valid"
+                                     matTooltip
+                                     matTooltipPosition="after"
+                                     #usedDstTooltip="matTooltip"
+                                     (mouseenter)="showTooltip(usedDstTooltip, bindDst)"
+                                     (mouseleave)="usedDstTooltip.hide()"
+                                     (mousedown)="usedDstTooltip.hide()">
+                        {{bindDst.name}}
+                    </mat-list-option>
+                </mat-selection-list>
+            </div>
+            <!--<div class="sel-dst-bind-desc">
+                <div *ngFor="let desc of usedBindDstDesc">
+                    <span class="desc-label">{{desc.key}}</span><span class="desc-value">{{desc.value}}</span>
+                </div>
+            </div>-->
+            <div class="send-binds-conteiner" >
+                <button id="send_binds"
+                        mat-stroked-button
+                        (click)="wrSrcBinds()"
+                        [disabled]="noSrcBinds">
+                    Send
+                </button>
+            </div>
+        </div>
+        <div class="trans-ctrl_conteiner">
+            <div class="trans-ctrl-button">
+                <button mat-stroked-button (click)="addBindDst()" [disabled]="emptyFlag">
+                    <mat-icon>
+                        arrow_back
+                    </mat-icon>
+                </button>
+            </div>
+            <div class="trans-ctrl-button">
+                <button mat-stroked-button (click)="removeBindDst()">
+                    <mat-icon>
+                        arrow_forward
+                    </mat-icon>
+                </button>
+            </div>
+        </div>
+        <div class="dst-binds-container">
+            <div class="dst-binds-header">
+                Available Destinations
+            </div>
+            <div class="free-binds-list">
+                <mat-selection-list id="free_binds"
+                                    [multiple]="false"
+                                    [(ngModel)]="freeBindDstListSelected"
+                                    (selectionChange)="freeBindDstChanged($event)">
+                    <mat-list-option class="binds-name"
+                                     *ngFor="let bindDst of freeBindDst"
+                                     [value]="bindDst"
+                                     [disabled]="!bindDst.valid"
+                                     matTooltip
+                                     matTooltipPosition="before"
+                                     #freeDstTooltip="matTooltip"
+                                     (mouseenter)="showTooltip(freeDstTooltip, bindDst)"
+                                     (mouseleave)="freeDstTooltip.hide()"
+                                     (mousedown)="freeDstTooltip.hide()">
+                        {{bindDst.name}}
+                    </mat-list-option>
+                </mat-selection-list>
+            </div>
+            <!--<div class="sel-dst-bind-desc">
+                <div *ngFor="let desc of freeBindDstDesc">
+                    <span class="desc-label">{{desc.key}}</span><span class="desc-value">{{desc.value}}</span>
+                </div>
+            </div>-->
+
+        </div>
+    </div>
+</div>
+
+<!--<div class="binds-footer">
+    <div>
+        <button mat-stroked-button (click)="close()">Cancel</button>
+    </div>
+    <div>
+        <button mat-stroked-button (click)="save()">Save</button>
+    </div>
+</div>-->
