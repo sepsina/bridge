@@ -1,94 +1,78 @@
-import {AfterViewInit, Component, ElementRef, OnInit, ViewChild, NgZone, OnDestroy} from '@angular/core';
-import {EventsService} from "./services/events.service";
-import {SerialLinkService} from "./services/serial-link.service";
-import {UdpService} from "./services/udp.service";
-import {HttpService} from "./services/http.service";
-import {StorageService} from "./services/storage.service";
+import {
+    AfterViewInit,
+    Component,
+    ElementRef,
+    OnInit,
+    ViewChild,
+    NgZone,
+    OnDestroy,
+} from '@angular/core';
+import {EventsService} from './services/events.service';
+import {SerialLinkService} from './services/serial-link.service';
+import {UdpService} from './services/udp.service';
+import {HttpService} from './services/http.service';
+import {StorageService} from './services/storage.service';
 import {UtilsService} from './services/utils.service';
-import {MatDialog, MatDialogConfig} from "@angular/material/dialog";
-import {sprintf} from 'sprintf-js';
-import {MatTooltip} from "@angular/material/tooltip";
+import {MatDialog, MatDialogConfig} from '@angular/material/dialog';
+import {MatTooltip} from '@angular/material/tooltip';
 
-import {SetStyles} from "./set-styles/set-styles.page";
-import {EditScrolls} from "./edit-scrolls/edit-scrolls";
-import {EditFreeDNS} from "./edit-freeDNS/edit-freeDNS";
-import {EditBinds} from "./binds/binds.page";
+import {SetStyles} from './set-styles/set-styles.page';
+import {EditScrolls} from './edit-scrolls/edit-scrolls';
+import {EditFreeDNS} from './edit-freeDNS/edit-freeDNS';
+import {EditBinds} from './binds/binds.page';
 
-//import {ScrollTo} from 'scroll-to-position';
-//import {NgScrollbar} from "ngx-scrollbar";
-import { PerfectScrollbarComponent } from 'ngx-perfect-scrollbar';
+import {PerfectScrollbarComponent} from 'ngx-perfect-scrollbar';
 
 import * as gConst from './gConst';
-import * as gIF from './gIF'
+import * as gIF from './gIF';
 
-import { fromEvent, Observable, Subscription } from "rxjs";
-import { debounceTime } from 'rxjs/operators';
-
-//import { LoadingController } from "@ionic/angular";
-
+import {fromEvent, Observable, Subscription} from 'rxjs';
+import {debounceTime} from 'rxjs/operators';
 
 @Component({
     selector: 'app-root',
     templateUrl: 'app.component.html',
     styleUrls: ['app.component.scss'],
 })
-export class AppComponent implements OnInit, AfterViewInit, OnDestroy{
-
+export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     @ViewChild('containerRef') containerRef: ElementRef;
-    //@ViewChild('scrollBar') scrollbarRef: NgScrollbar;
     @ViewChild(PerfectScrollbarComponent) componentRef?: PerfectScrollbarComponent;
 
     resizeObservable$: Observable<Event>;
     resizeSubscription$: Subscription;
 
-    //blurObservable$: Observable<Event>;
-    //blurSubscription$: Subscription;
-
     bkgImgWidth: number;
     bkgImgHeight: number;
-    //imgWidth: number;
-    //imgHeight: number;
     imgUrl: string;
-
     imgDim = {} as gIF.imgDim_t;
 
     scrolls: gIF.scroll_t[] = [
         {
             name: 'floor-1',
             yPos: 10,
-            duration: 200
+            duration: 200,
         },
         {
             name: 'floor-2',
             yPos: 50,
-            duration: 800
-        }
+            duration: 800,
+        },
     ];
 
     partDesc: gIF.partDesc_t[] = [];
     partMap = new Map();
 
-    //dragIdx: number = -1;
-    //attrIdx: number = -1;
-    //selAttr = {} as gIF.hostedAttr_t;
-    //loading: any;
-
-
-
-    constructor(private events: EventsService,
-                private serialLink: SerialLinkService,
-                private udp: UdpService,
-                private http: HttpService,
-                public storage: StorageService,
-                //private loadingController: LoadingController,
-                private matDialog: MatDialog,
-                private ngZone: NgZone,
-                private utils: UtilsService) {
-
-        setTimeout(()=>{
-            //this.init();
-        }, 100);
-
+    constructor(
+        private events: EventsService,
+        private serialLink: SerialLinkService,
+        private udp: UdpService,
+        private http: HttpService,
+        public storage: StorageService,
+        private matDialog: MatDialog,
+        private ngZone: NgZone,
+        private utils: UtilsService
+    ) {
+        // ---
     }
 
     /***********************************************************************************************
@@ -108,20 +92,19 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy{
      *
      */
     ngOnInit() {
-
-        window.onbeforeunload = async ()=>{
+        window.onbeforeunload = async () => {
             this.udp.closeSocket();
             this.serialLink.closeComPort();
         };
 
         this.resizeObservable$ = fromEvent(window, 'resize');
-        this.resizeSubscription$ = this.resizeObservable$.pipe(debounceTime(500)).subscribe(evt => {
-            this.scaleImgConteiner();
-        });
+        this.resizeSubscription$ = this.resizeObservable$
+            .pipe(debounceTime(500))
+            .subscribe((evt) => {
+                this.scaleImgConteiner();
+            });
 
         this.init();
-
-        // ---
     }
 
     /***********************************************************************************************
@@ -142,19 +125,18 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy{
      */
     async init() {
         try {
-            let base64 = window.nw.require('fs').readFileSync('./src/assets/floor_plan.jpg', 'base64');
+            let base64 = window.nw
+                .require('fs')
+                .readFileSync('./src/assets/floor_plan.jpg', 'base64');
             this.imgUrl = `data:image/jpeg;base64,${base64}`;
             this.setBkgImg(this.imgUrl);
-            //this.scaleImgConteiner();
         } catch (err) {
             console.log('read dir err: ' + err.code);
-            //this.setBkgImg(gConst.DFLT_BKG_IMG);
         }
-
         try {
             let parts = window.nw.require('fs').readFileSync('./src/assets/parts.json', 'utf8');
             this.partDesc = JSON.parse(parts);
-            for(let desc of this.partDesc){
+            for (let desc of this.partDesc) {
                 let part = {} as gIF.part_t;
                 part.devName = desc.devName;
                 part.part = desc.part;
@@ -165,17 +147,9 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy{
         } catch (err) {
             console.log('read parts err: ' + JSON.stringify(err));
         }
-
         //this.scrolls = [];
         //const scrolls = await this.ns.getScrolls();
         //this.scrolls = JSON.parse(this.storage.getScrolls());
-        /*
-        this.loading = await this.loadingController.create({
-            message: '... wait',
-            duration: 10000,
-            mode: "md"
-        });
-        */
     }
 
     /***********************************************************************************************
@@ -184,13 +158,17 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy{
      * brief
      *
      */
-    onScroll(idx){
+    onScroll(idx) {
         const pos = {
             top: this.scrolls[idx].yPos,
-            duration: this.scrolls[idx].duration
+            duration: this.scrolls[idx].duration,
         };
 
-        this.componentRef.directiveRef.scrollTo(0, (this.scrolls[idx].yPos * this.imgDim.height / 100), this.scrolls[idx].duration);
+        this.componentRef.directiveRef.scrollTo(
+            0,
+            (this.scrolls[idx].yPos * this.imgDim.height) / 100,
+            this.scrolls[idx].duration
+        );
     }
 
     /***********************************************************************************************
@@ -199,10 +177,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy{
      * brief
      *
      */
-    getAttrStyle(attr: any){
+    getAttrStyle(attr: any) {
         let attrStyle = attr.value.style;
         let retStyle = {
-            'color': attrStyle.color,
+            color: attrStyle.color,
             'background-color': attrStyle.bgColor,
             'font-size.px': attrStyle.fontSize,
             'border-color': attrStyle.borderColor,
@@ -214,12 +192,12 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy{
             'padding-bottom.px': attrStyle.paddingBottom,
             'padding-left.px': attrStyle.paddingLeft,
         };
-        if(attr.value.isValid == false){
-            retStyle.color = "gray";
-            retStyle['background-color'] = "transparent";
-            retStyle['border-color'] = "gray";
+        if (attr.value.isValid == false) {
+            retStyle.color = 'gray';
+            retStyle['background-color'] = 'transparent';
+            retStyle['border-color'] = 'gray';
             retStyle['border-width.px'] = 2;
-            retStyle['border-style'] = "dotted";
+            retStyle['border-style'] = 'dotted';
         }
         return retStyle;
     }
@@ -230,13 +208,13 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy{
      * brief
      *
      */
-    getAttrPosition(attr: any){
+    getAttrPosition(attr: any) {
         let attrPos = attr.value.pos;
 
         return {
             x: attrPos.x * this.imgDim.width,
-            y: attrPos.y * this.imgDim.height
-        }
+            y: attrPos.y * this.imgDim.height,
+        };
     }
 
     /***********************************************************************************************
@@ -245,24 +223,18 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy{
      * brief
      *
      */
-    setBkgImg(imgSrc: string){
+    setBkgImg(imgSrc: string) {
         let bkgImg = new Image();
         bkgImg.src = imgSrc;
-        bkgImg.onload = ()=>{
-            //let el = document.getElementById('containerID');
+        bkgImg.onload = () => {
             this.bkgImgWidth = bkgImg.width;
             this.bkgImgHeight = bkgImg.height;
             const el = this.containerRef.nativeElement;
             let divDim = el.getBoundingClientRect();
             this.imgDim.width = divDim.width;
             this.imgDim.height = Math.round((divDim.width / bkgImg.width) * bkgImg.height);
-            el.style.height = this.imgDim.height + "px";
-            /*
-            if (divHeight > divDim.height) {
-                el.style.height = divHeight + "px";
-            }
-            */
-            el.style.backgroundImage = 'url(' + imgSrc + ')';
+            el.style.height = `${this.imgDim.height}px`;
+            el.style.backgroundImage = `url(${imgSrc})`;
             el.style.backgroundAttachment = 'scroll';
             el.style.backgroundRepeat = 'no-repeat';
             el.style.backgroundSize = 'contain';
@@ -275,8 +247,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy{
      * brief
      *
      */
-    scaleImgConteiner(){
-
+    scaleImgConteiner() {
         const el = this.containerRef.nativeElement;
         let divDim = el.getBoundingClientRect();
 
@@ -284,7 +255,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy{
 
         this.imgDim.width = divDim.width;
         this.imgDim.height = Math.round((divDim.width / this.bkgImgWidth) * this.bkgImgHeight);
-        el.style.height = this.imgDim.height + "px";
+        el.style.height = `${this.imgDim.height}px`;
     }
 
     /***********************************************************************************************
@@ -293,11 +264,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy{
      * @brief
      *
      */
-    async onDragEnded(event: any,
-                      keyVal: any){
+    async onDragEnded(event: any, keyVal: any) {
         let pos: gIF.nsPos_t = {
-            x: event.x/this.imgDim.width,
-            y: event.y/this.imgDim.height
+            x: event.x / this.imgDim.width,
+            y: event.y / this.imgDim.height,
         };
         keyVal.value.pos = pos;
 
@@ -311,8 +281,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy{
      *
      */
     async setStyles(keyVal: any) {
-
-        setTimeout(()=>{
+        setTimeout(() => {
             const dialogConfig = new MatDialogConfig();
             dialogConfig.data = keyVal;
             dialogConfig.width = '350px';
@@ -321,12 +290,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy{
             dialogConfig.panelClass = 'set-styles-container';
 
             const dlgRef = this.matDialog.open(SetStyles, dialogConfig);
-            dlgRef.afterOpened().subscribe(()=>{
-                //this.dismissLoading();
+            dlgRef.afterOpened().subscribe(() => {
+                // ---
             });
         }, 10);
-
-        //await this.loading.present();
     }
 
     /***********************************************************************************************
@@ -336,12 +303,11 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy{
      *
      */
     async onEditScrollsClick(scrollRef) {
-
-        setTimeout(()=>{
+        setTimeout(() => {
             const dlgData = {
                 scrolls: JSON.parse(JSON.stringify(this.scrolls)),
                 scrollRef: this.componentRef.directiveRef,
-                imgDim: this.imgDim
+                imgDim: this.imgDim,
             };
             const dialogConfig = new MatDialogConfig();
             dialogConfig.data = dlgData;
@@ -352,18 +318,16 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy{
 
             const dlgRef = this.matDialog.open(EditScrolls, dialogConfig);
 
-            dlgRef.afterOpened().subscribe(()=>{
-                //this.dismissLoading();
+            dlgRef.afterOpened().subscribe(() => {
+                // ---
             });
-            dlgRef.afterClosed().subscribe((data)=>{
-                if(data){
+            dlgRef.afterClosed().subscribe((data) => {
+                if (data) {
                     this.scrolls = data;
                     this.storage.setScrolls(this.scrolls);
                 }
             });
         }, 10);
-
-        //await this.loading.present();
     }
 
     /***********************************************************************************************
@@ -373,7 +337,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy{
      *
      */
     async setDNS() {
-        setTimeout(()=>{
+        setTimeout(() => {
             const dialogConfig = new MatDialogConfig();
             dialogConfig.data = '';
             dialogConfig.width = '350px';
@@ -382,12 +346,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy{
             dialogConfig.panelClass = 'set-dns-container';
 
             const dlgRef = this.matDialog.open(EditFreeDNS, dialogConfig);
-            dlgRef.afterOpened().subscribe(()=>{
-                //this.dismissLoading();
+            dlgRef.afterOpened().subscribe(() => {
+                // ---
             });
         }, 10);
-
-        //await this.loading.present();
     }
     /***********************************************************************************************
      * @fn          editBinds
@@ -396,8 +358,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy{
      *
      */
     async editBinds() {
-
-        setTimeout(()=>{
+        setTimeout(() => {
             const dlgData = {
                 partMap: this.partMap,
             };
@@ -410,12 +371,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy{
 
             const dlgRef = this.matDialog.open(EditBinds, dialogConfig);
 
-            dlgRef.afterOpened().subscribe(()=>{
-                //this.dismissLoading();
+            dlgRef.afterOpened().subscribe(() => {
+                // ---
             });
         }, 10);
-
-        //await this.loading.present();
     }
 
     /***********************************************************************************************
@@ -424,20 +383,19 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy{
      * brief
      *
      */
-    showTooltip(tt: MatTooltip,
-                attr: gIF.hostedAttr_t){
+    showTooltip(tt: MatTooltip, attr: gIF.hostedAttr_t) {
         let ttMsg = '';
-        ttMsg += sprintf('attr-name: %s \n', attr.name);
-        ttMsg += sprintf('S/N: %s \n', this.utils.extToHex(attr.extAddr));
+        ttMsg += `attr-name: ${attr.name} \n`;
+        ttMsg += `S/N: ${this.utils.extToHex(attr.extAddr)} \n`;
         let partDesc: gIF.part_t = this.partMap.get(attr.partNum);
-        if(partDesc){
-            ttMsg += sprintf('node-name: %s \n', partDesc.devName);
-            ttMsg += sprintf('part: %s \n', partDesc.part);
-            ttMsg += sprintf('url: %s \n', partDesc.url);
+        if (partDesc) {
+            ttMsg += `node-name: ${partDesc.devName} \n`;
+            ttMsg += `part: ${partDesc.part} \n`;
+            ttMsg += `url: ${partDesc.url} \n`;
         }
         tt.message = ttMsg;
         tt.showDelay = 500;
-        tt.tooltipClass = "attr-tooltip";
+        tt.tooltipClass = 'attr-tooltip';
         tt.show();
     }
     /***********************************************************************************************
@@ -448,35 +406,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy{
      *
     hideTooltip(tt: MatTooltip){
         tt.hide();
-    }
-    */
-
-    /***********************************************************************************************
-     * fn          dismissLoading
-     *
-     * brief
-     *
-     *
-     dismissLoading(){
-        this.loading.dismiss().then(
-            ()=>{
-                this.loadingController.create({
-                    message: '... wait',
-                    duration: 10000,
-                    mode: "md"
-                }).then(
-                    (loading)=>{
-                        this.loading = loading;
-                    },
-                    (err)=>{
-                        console.log(err);
-                    }
-                );
-            },
-            (err)=>{
-                console.error(err);
-            }
-        );
     }
     */
 }

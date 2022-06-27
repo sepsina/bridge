@@ -1,21 +1,19 @@
-import {Injectable, OnDestroy} from '@angular/core';
-import {EventsService} from "./events.service";
+import {Injectable} from '@angular/core';
+import {EventsService} from './events.service';
 import {UtilsService} from './utils.service';
 import * as gConst from '../gConst';
-import * as gIF from '../gIF'
+import * as gIF from '../gIF';
 
 @Injectable({
-    providedIn: 'root'
+    providedIn: 'root',
 })
-export class PortService implements OnDestroy{
-
+export class PortService {
     private searchPortFlag = false;
     private validPortFlag = false;
     private portOpenFlag = false;
     private portIdx = 0;
 
     private testPortTMO = null;
-    private findPortTMO = null;
 
     private crc: number;
     private calcCRC: number;
@@ -41,12 +39,11 @@ export class PortService implements OnDestroy{
     private comPorts = [];
     private SerialPort = window.nw.require('chrome-apps-serialport').SerialPort;
 
-    constructor(private events: EventsService,
-                private utils: UtilsService) {
-        this.events.subscribe('wr_binds', (binds)=>{
+    constructor(private events: EventsService, private utils: UtilsService) {
+        this.events.subscribe('wr_binds', (binds) => {
             this.wrBinds(binds);
         });
-        this.events.subscribe('zcl_cmd', (cmd)=>{
+        this.events.subscribe('zcl_cmd', (cmd) => {
             this.udpZclCmd(cmd);
         });
     }
@@ -58,28 +55,19 @@ export class PortService implements OnDestroy{
      *
      */
     async checkCom() {
-
-        if(this.comFlag == false){
-            if(this.searchPortFlag == false) {
+        if (this.comFlag == false) {
+            this.hostCmdQueue = [];
+            this.hostCmdFlag = false;
+            if (this.searchPortFlag == false) {
                 setTimeout(() => {
                     this.listComPorts();
                 }, 100);
             }
         }
         this.comFlag = false;
-        setTimeout(()=>{
+        setTimeout(() => {
             this.checkCom();
-        }, 10000);
-    }
-
-    /***********************************************************************************************
-     * fn          ngOnDestroy
-     *
-     * brief
-     *
-     */
-    ngOnDestroy() {
-        // ---
+        }, 15000);
     }
 
     /***********************************************************************************************
@@ -92,9 +80,9 @@ export class PortService implements OnDestroy{
         this.validPortFlag = false;
         this.portOpenFlag = false;
         console.log('close serial port');
-        if(typeof(this.slPort.close) === 'function'){
-            this.slPort.close((err)=>{
-                if(err) {
+        if (typeof this.slPort.close === 'function') {
+            this.slPort.close((err) => {
+                if (err) {
                     console.log(`port close err: ${err.message}`);
                 }
             });
@@ -107,24 +95,20 @@ export class PortService implements OnDestroy{
      * brief
      *
      */
-    listComPorts(){
-        this.hostCmdQueue = [];
-        this.hostCmdFlag = false;
-
+    listComPorts() {
         this.searchPortFlag = true;
         this.validPortFlag = false;
-        if(this.portOpenFlag == true){
+        if (this.portOpenFlag == true) {
             this.closeComPort();
         }
-        this.SerialPort.list().then((ports)=>{
+        this.SerialPort.list().then((ports) => {
             this.comPorts = ports;
-            if(ports.length){
+            if (ports.length) {
                 this.portIdx = 0;
-                setTimeout(()=>{
+                setTimeout(() => {
                     this.findComPort();
                 }, 100);
-            }
-            else {
+            } else {
                 this.searchPortFlag = false;
                 console.log('no com ports');
             }
@@ -137,50 +121,52 @@ export class PortService implements OnDestroy{
      * brief
      *
      */
-    private findComPort(){
-        if(this.validPortFlag == false) {
-            if(this.portOpenFlag == true){
+    private findComPort() {
+        if (this.validPortFlag == false) {
+            if (this.portOpenFlag == true) {
                 this.closeComPort();
             }
             let portPath = this.comPorts[this.portIdx].path;
             console.log('testing: ', portPath);
             let portOpt = {
                 baudrate: 115200,
-                autoOpen: false
+                autoOpen: false,
             };
             this.slPort = new this.SerialPort(portPath, portOpt);
-            this.slPort.on('open', ()=>{
-                this.slPort.on('data', (data)=>{
+            this.slPort.on('open', () => {
+                this.slPort.on('data', (data) => {
                     this.slOnData(data);
                 });
             });
-            let openErr = false;
-            this.slPort.open((err)=>{
-                if(err) {
-                    openErr = true;
-                    console.log(`open err on ${portPath}: ${err.message}`);
-                }
-                else {
+            let done = true;
+            this.portIdx++;
+            if (this.portIdx < this.comPorts.length) {
+                done = false;
+            }
+            this.slPort.open((err) => {
+                if (err) {
+                    if (done == true) {
+                        this.searchPortFlag = false;
+                    } else {
+                        setTimeout(() => {
+                            this.findComPort();
+                        }, 200);
+                    }
+                } else {
                     this.portOpenFlag = true;
-                    this.testPortTMO = setTimeout(()=>{
-                        this.testPortTMO = null;
+                    this.testPortTMO = setTimeout(() => {
                         console.log('test port tmo');
                         this.closeComPort();
-                    }, 1000);
+                        this.portOpenFlag = false;
+                        if (done == true) {
+                            this.searchPortFlag = false;
+                        } else {
+                            this.findComPort();
+                        }
+                    }, 2000);
                     this.testPortReq();
-                   }
+                }
             });
-            this.portIdx++;
-            if(this.portIdx < this.comPorts.length){
-                this.findPortTMO = setTimeout(() => {
-                    this.findPortTMO = null;
-                    this.findComPort();
-                }, openErr ? 200 : 2000);
-            }
-            else {
-                this.searchPortFlag = false;
-                this.findPortTMO = null;
-            }
         }
     }
 
@@ -191,11 +177,10 @@ export class PortService implements OnDestroy{
      *
      */
     private slOnData(msg) {
-
         let pkt = new Uint8Array(msg);
-        for(let i = 0; i < pkt.length; i++){
+        for (let i = 0; i < pkt.length; i++) {
             let rxByte = pkt[i];
-            switch(rxByte){
+            switch (rxByte) {
                 case gConst.SL_START_CHAR: {
                     this.msgIdx = 0;
                     this.isEsc = false;
@@ -207,12 +192,12 @@ export class PortService implements OnDestroy{
                     break;
                 }
                 case gConst.SL_END_CHAR: {
-                    if(this.crc == this.calcCRC) {
+                    if (this.crc == this.calcCRC) {
                         let slMsg: gIF.slMsg_t = {
                             type: this.msgType,
-                            msg: Array.from(this.rxMsg).slice(0, this.msgIdx)
+                            msg: Array.from(this.rxMsg).slice(0, this.msgIdx),
                         };
-                        setTimeout(()=>{
+                        setTimeout(() => {
                             this.processMsg(slMsg);
                         }, 0);
                     }
@@ -220,11 +205,11 @@ export class PortService implements OnDestroy{
                     break;
                 }
                 default: {
-                    if(this.isEsc == true){
+                    if (this.isEsc == true) {
                         rxByte ^= 0x10;
                         this.isEsc = false;
                     }
-                    switch(this.rxState) {
+                    switch (this.rxState) {
                         case gIF.eRxState.E_STATE_RX_WAIT_START: {
                             // ---
                             break;
@@ -259,7 +244,7 @@ export class PortService implements OnDestroy{
                             break;
                         }
                         case gIF.eRxState.E_STATE_RX_WAIT_DATA: {
-                            if(this.msgIdx < this.msgLen){
+                            if (this.msgIdx < this.msgLen) {
                                 this.rxMsg[this.msgIdx++] = rxByte;
                                 this.calcCRC ^= rxByte;
                             }
@@ -277,33 +262,23 @@ export class PortService implements OnDestroy{
      * brief
      *
      */
-    private processMsg(msg: gIF.slMsg_t){
-
+    private processMsg(msg: gIF.slMsg_t) {
         this.comFlag = true;
-
         let dataArray = new Uint8Array(msg.msg);
-        switch(msg.type) {
+        switch (msg.type) {
             case gConst.SL_MSG_TESTPORT: {
                 let rxView = new DataView(this.rxBuf);
                 let idNum: number;
-                //let byteData: number;
                 let msgIdx = 0;
                 let msgSeqNum = rxView.getUint8(msgIdx++);
-                if(msgSeqNum == this.seqNum) {
+                if (msgSeqNum == this.seqNum) {
                     idNum = rxView.getUint32(msgIdx, gConst.LE);
                     msgIdx += 4;
-                    if(idNum === 0x67190110){
-                        if(this.findPortTMO){
-                            clearTimeout(this.findPortTMO);
-                            this.findPortTMO = null;
-                        }
-                        if(this.testPortTMO){
-                            clearTimeout(this.testPortTMO);
-                            this.testPortTMO = null;
-                            this.validPortFlag = true;
-                            this.searchPortFlag = false;
-                            console.log('port valid');
-                        }
+                    if (idNum === 0x67190110) {
+                        clearTimeout(this.testPortTMO);
+                        this.validPortFlag = true;
+                        this.searchPortFlag = false;
+                        console.log('port valid');
                     }
                 }
                 break;
@@ -321,60 +296,57 @@ export class PortService implements OnDestroy{
                 let ttl = slMsg.getUint16(idx, gConst.LE);
 
                 let msg = this.utils.timeStamp();
-                msg += ` host annce -> shortAddr: 0x${dataHost.shortAddr.toString(16).padStart(4, '0').toUpperCase()},`;
-                msg += ` extAddr: ${this.extToHex(dataHost.extAddr)},`;
+                msg += ` host annce -> shortAddr: 0x${dataHost.shortAddr
+                    .toString(16)
+                    .padStart(4, '0')
+                    .toUpperCase()},`;
+                msg += ` extAddr: ${this.utils.extToHex(dataHost.extAddr)},`;
                 msg += ` numAttrSets: ${dataHost.numAttrSets},`;
                 msg += ` numSrcBinds: ${dataHost.numSrcBinds}`;
                 console.log(msg);
 
-                if(this.hostCmdQueue.length > 15){
+                if (this.hostCmdQueue.length > 15) {
                     this.hostCmdQueue = [];
                     this.hostCmdFlag = false;
                 }
-
-                //if(this.hostCmdQueue.length < 1000) {
-                    if(dataHost.numAttrSets > 0) {
-                        let cmd: gIF.hostCmd_t = {
-                            shortAddr: dataHost.shortAddr,
-                            type: gConst.RD_ATTR,
-                            idx: 0,
-                            retryCnt: gConst.RD_HOST_RETRY_CNT,
-                            param: ''
-                        };
-                        this.hostCmdQueue.push(cmd);
+                if (dataHost.numAttrSets > 0) {
+                    let cmd: gIF.hostCmd_t = {
+                        shortAddr: dataHost.shortAddr,
+                        type: gConst.RD_ATTR,
+                        idx: 0,
+                        retryCnt: gConst.RD_HOST_RETRY_CNT,
+                        param: '',
+                    };
+                    this.hostCmdQueue.push(cmd);
+                }
+                if (dataHost.numSrcBinds > 0) {
+                    let cmd: gIF.hostCmd_t = {
+                        shortAddr: dataHost.shortAddr,
+                        type: gConst.RD_BINDS,
+                        idx: 0,
+                        retryCnt: gConst.RD_HOST_RETRY_CNT,
+                        param: '',
+                    };
+                    this.hostCmdQueue.push(cmd);
+                }
+                if (this.hostCmdQueue.length > 0) {
+                    if (this.hostCmdFlag === false) {
+                        this.hostCmdFlag = true;
+                        this.runHostCmd();
                     }
-                    if(dataHost.numSrcBinds > 0) {
-                        let cmd: gIF.hostCmd_t = {
-                            shortAddr: dataHost.shortAddr,
-                            type: gConst.RD_BINDS,
-                            idx: 0,
-                            retryCnt: gConst.RD_HOST_RETRY_CNT,
-                            param: ''
-                        };
-                        this.hostCmdQueue.push(cmd);
-                    }
-                    if(this.hostCmdQueue.length > 0) {
-                        if(this.hostCmdFlag == false) {
+                    if (this.runTmoRef === null) {
+                        this.runTmoRef = setTimeout(() => {
+                            this.runTmoRef = null;
                             this.hostCmdFlag = true;
                             this.runHostCmd();
-                        }
-                        if(this.runTmoRef === null) {
-                            this.runTmoRef = setTimeout(() => {
-                                this.runTmoRef = null;
-                                this.hostCmdFlag = true;
-                                this.runHostCmd();
-                            }, 3000);
-                        }
+                        }, 3000);
                     }
-                //}
-                //else {
-                //    console.log('*** OVERLOAD ***');
-                //}
+                }
                 break;
             }
             case gConst.SL_MSG_LOG: {
                 let idx = dataArray.indexOf(10);
-                if(idx > -1){
+                if (idx > -1) {
                     dataArray[idx] = 32;
                 }
                 console.log(String.fromCharCode.apply(null, dataArray));
@@ -385,10 +357,10 @@ export class PortService implements OnDestroy{
                 let rxView = new DataView(dataArray.buffer);
                 let msgIdx = 0;
                 let msgSeqNum = rxView.getUint8(msgIdx++);
-                if(msgSeqNum == this.seqNum){
+                if (msgSeqNum == this.seqNum) {
                     rxSet.hostShortAddr = this.hostCmdQueue[0].shortAddr;
                     let status = rxView.getUint8(msgIdx++);
-                    if(status == gConst.SL_CMD_OK) {
+                    if (status == gConst.SL_CMD_OK) {
                         let memIdx = rxView.getInt8(msgIdx++);
                         rxSet.partNum = rxView.getUint32(msgIdx, gConst.LE);
                         msgIdx += 4;
@@ -406,7 +378,7 @@ export class PortService implements OnDestroy{
                         msgIdx += 2;
                         rxSet.valsLen = rxView.getUint8(msgIdx++);
                         rxSet.attrVals = [];
-                        for(let i =  0; i < rxSet.valsLen; i++){
+                        for (let i = 0; i < rxSet.valsLen; i++) {
                             rxSet.attrVals[i] = rxView.getUint8(msgIdx++);
                         }
 
@@ -417,13 +389,11 @@ export class PortService implements OnDestroy{
                         cmd.retryCnt = gConst.RD_HOST_RETRY_CNT;
                         this.hostCmdQueue.push(cmd);
                         this.runHostCmd();
-                    }
-                    else {
+                    } else {
                         this.hostCmdQueue.shift();
-                        if(this.hostCmdQueue.length > 0){
+                        if (this.hostCmdQueue.length > 0) {
                             this.runHostCmd();
-                        }
-                        else {
+                        } else {
                             this.seqNum = ++this.seqNum % 256;
                             clearTimeout(this.hostCmdTmoRef);
                             this.hostCmdFlag = false;
@@ -437,10 +407,10 @@ export class PortService implements OnDestroy{
                 let rxView = new DataView(dataArray.buffer);
                 let msgIdx = 0;
                 let msgSeqNum = rxView.getUint8(msgIdx++);
-                if(msgSeqNum == this.seqNum){
+                if (msgSeqNum == this.seqNum) {
                     rxBinds.hostShortAddr = this.hostCmdQueue[0].shortAddr;
                     let status = rxView.getUint8(msgIdx++);
-                    if(status == gConst.SL_CMD_OK) {
+                    if (status == gConst.SL_CMD_OK) {
                         let memIdx = rxView.getInt8(msgIdx++);
                         rxBinds.partNum = rxView.getUint32(msgIdx, gConst.LE);
                         msgIdx += 4;
@@ -454,7 +424,7 @@ export class PortService implements OnDestroy{
                         rxBinds.maxBinds = rxView.getUint8(msgIdx++);
                         let numBinds = rxView.getUint8(msgIdx++);
                         rxBinds.bindsDst = [];
-                        for(let i = 0; i < numBinds; i++){
+                        for (let i = 0; i < numBinds; i++) {
                             let bindDst = {} as gIF.bindDst_t;
                             bindDst.dstExtAddr = rxView.getFloat64(msgIdx, gConst.LE);
                             msgIdx += 8;
@@ -469,13 +439,11 @@ export class PortService implements OnDestroy{
                         cmd.retryCnt = gConst.RD_HOST_RETRY_CNT;
                         this.hostCmdQueue.push(cmd);
                         this.runHostCmd();
-                    }
-                    else {
+                    } else {
                         this.hostCmdQueue.shift();
-                        if(this.hostCmdQueue.length > 0){
+                        if (this.hostCmdQueue.length > 0) {
                             this.runHostCmd();
-                        }
-                        else {
+                        } else {
                             this.seqNum = ++this.seqNum % 256;
                             clearTimeout(this.hostCmdTmoRef);
                             this.hostCmdFlag = false;
@@ -488,19 +456,17 @@ export class PortService implements OnDestroy{
                 let rxView = new DataView(dataArray.buffer);
                 let msgIdx = 0;
                 let msgSeqNum = rxView.getUint8(msgIdx++);
-                if(msgSeqNum == this.seqNum){
+                if (msgSeqNum == this.seqNum) {
                     let status = rxView.getUint8(msgIdx++);
-                    if(status == gConst.SL_CMD_OK) {
+                    if (status == gConst.SL_CMD_OK) {
                         console.log('wr binds status: OK');
-                    }
-                    else {
+                    } else {
                         console.log('wr binds status: FAIL');
                     }
                     this.hostCmdQueue.shift();
-                    if(this.hostCmdQueue.length > 0){
+                    if (this.hostCmdQueue.length > 0) {
                         this.runHostCmd();
-                    }
-                    else {
+                    } else {
                         this.seqNum = ++this.seqNum % 256;
                         clearTimeout(this.hostCmdTmoRef);
                         this.hostCmdFlag = false;
@@ -512,13 +478,12 @@ export class PortService implements OnDestroy{
                 let rxView = new DataView(dataArray.buffer);
                 let msgIdx = 0;
                 let msgSeqNum = rxView.getUint8(msgIdx++);
-                if(msgSeqNum == this.seqNum){
+                if (msgSeqNum == this.seqNum) {
                     // ---
                     this.hostCmdQueue.shift();
-                    if(this.hostCmdQueue.length > 0){
+                    if (this.hostCmdQueue.length > 0) {
                         this.runHostCmd();
-                    }
-                    else {
+                    } else {
                         this.seqNum = ++this.seqNum % 256;
                         clearTimeout(this.hostCmdTmoRef);
                         this.hostCmdFlag = false;
@@ -539,48 +504,36 @@ export class PortService implements OnDestroy{
      * brief
      *
      */
-    private runHostCmd(){
-
+    private runHostCmd() {
         clearTimeout(this.hostCmdTmoRef);
-
-        if(this.runTmoRef){
+        if (this.runTmoRef) {
             clearTimeout(this.runTmoRef);
             this.runTmoRef = null;
         }
-
         let hostCmd = this.hostCmdQueue[0];
-        if(hostCmd) {
+        if (hostCmd) {
             switch (hostCmd.type) {
                 case gConst.RD_ATTR: {
-                    //setTimeout(() => {
-                        this.reqAttrAtIdx();
-                    //}, gConst.REQ_TMO);
+                    this.reqAttrAtIdx();
                     break;
                 }
                 case gConst.RD_BINDS: {
-                    //setTimeout(() => {
-                        this.reqBindsAtIdx();
-                    //}, gConst.REQ_TMO);
+                    this.reqBindsAtIdx();
                     break;
                 }
                 case gConst.WR_BINDS: {
-                    //setTimeout(() => {
-                        this.wrBindsReq();
-                    //}, gConst.REQ_TMO);
+                    this.wrBindsReq();
                     break;
                 }
                 case gConst.ZCL_CMD: {
-                    //setTimeout(() => {
-                        this.udpZclReq();
-                    //}, gConst.REQ_TMO);
+                    this.udpZclReq();
                     break;
                 }
             }
         }
-        this.hostCmdTmoRef = setTimeout(()=>{
+        this.hostCmdTmoRef = setTimeout(() => {
             this.hostCmdTmo();
         }, gConst.RD_HOST_TMO);
-
     }
 
     /***********************************************************************************************
@@ -589,26 +542,25 @@ export class PortService implements OnDestroy{
      * brief
      *
      */
-    private hostCmdTmo(){
+    private hostCmdTmo() {
+        console.log('--- READ_HOST_TMO ---');
 
-        console.log("--- READ_HOST_TMO ---");
-
-        if(this.hostCmdQueue.length == 0){
+        if (this.hostCmdQueue.length == 0) {
             this.hostCmdFlag = false;
             return;
         }
         let hostCmd = this.hostCmdQueue.shift();
-        if(hostCmd.retryCnt){
+        if (hostCmd.retryCnt) {
             hostCmd.retryCnt--;
             this.hostCmdQueue.push(hostCmd);
         }
-        if(this.hostCmdQueue.length == 0){
+        if (this.hostCmdQueue.length == 0) {
             this.hostCmdFlag = false;
             return;
         }
 
         let cmd = this.hostCmdQueue[0];
-        switch(cmd.type){
+        switch (cmd.type) {
             case gConst.RD_ATTR: {
                 this.reqAttrAtIdx();
                 break;
@@ -627,7 +579,7 @@ export class PortService implements OnDestroy{
             }
         }
 
-        this.hostCmdTmoRef = setTimeout(()=>{
+        this.hostCmdTmoRef = setTimeout(() => {
             this.hostCmdTmo();
         }, gConst.RD_HOST_TMO);
     }
@@ -638,8 +590,7 @@ export class PortService implements OnDestroy{
      * brief
      *
      */
-    private testPortReq(){
-
+    private testPortReq() {
         let pktBuf = new ArrayBuffer(64);
         let pktData = new Uint8Array(pktBuf);
         let pktView = new DataView(pktBuf);
@@ -651,7 +602,7 @@ export class PortService implements OnDestroy{
         msgIdx = 0;
         pktView.setUint16(msgIdx, gConst.SL_MSG_TESTPORT, gConst.LE);
         msgIdx += 2;
-        msgIdx += (2 + 1); // len + crc
+        msgIdx += 2 + 1; // len + crc
         // cmd data
         pktView.setUint8(msgIdx++, this.seqNum);
         pktView.setUint32(msgIdx, 0x67190110, gConst.LE);
@@ -660,15 +611,15 @@ export class PortService implements OnDestroy{
         let dataLen = msgLen - gConst.HEAD_LEN;
         pktView.setUint16(gConst.LEN_IDX, dataLen, gConst.LE);
         let crc = 0;
-        for(i = 0; i < msgLen; i++){
+        for (i = 0; i < msgLen; i++) {
             crc ^= pktData[i];
         }
         pktView.setUint8(gConst.CRC_IDX, crc);
 
         msgIdx = 0;
         slMsgBuf[msgIdx++] = gConst.SL_START_CHAR;
-        for(i = 0; i < msgLen; i++) {
-            if(pktData[i] < 0x10){
+        for (i = 0; i < msgLen; i++) {
+            if (pktData[i] < 0x10) {
                 pktData[i] ^= 0x10;
                 slMsgBuf[msgIdx++] = gConst.SL_ESC_CHAR;
             }
@@ -678,7 +629,7 @@ export class PortService implements OnDestroy{
 
         let slMsgLen = msgIdx;
         let slMsg = slMsgBuf.slice(0, slMsgLen);
-        this.slPort.write(slMsg, "utf8", ()=>{
+        this.slPort.write(slMsg, 'utf8', () => {
             // ---
         });
     }
@@ -689,11 +640,9 @@ export class PortService implements OnDestroy{
      * brief
      *
      */
-    private reqAttrAtIdx(){
-
+    private reqAttrAtIdx() {
         let hostCmd = this.hostCmdQueue[0];
-
-        if(hostCmd.shortAddr == undefined){
+        if (hostCmd.shortAddr == undefined) {
             console.log('--- REQ_ATTR_AT_IDX HOST UNDEFINED ---');
             return; // EMBEDDED RETURN
         }
@@ -708,7 +657,7 @@ export class PortService implements OnDestroy{
         msgIdx = 0;
         pktView.setUint16(msgIdx, gConst.SL_MSG_READ_ATTR_SET_AT_IDX, gConst.LE);
         msgIdx += 2;
-        msgIdx += (2 + 1); // len + crc
+        msgIdx += 2 + 1; // len + crc
         // cmd data
         pktView.setUint8(msgIdx++, this.seqNum);
         pktView.setUint16(msgIdx, hostCmd.shortAddr, gConst.LE);
@@ -719,15 +668,15 @@ export class PortService implements OnDestroy{
         let dataLen = msgLen - gConst.HEAD_LEN;
         pktView.setUint16(gConst.LEN_IDX, dataLen, gConst.LE);
         let crc = 0;
-        for(i = 0; i < msgLen; i++){
+        for (i = 0; i < msgLen; i++) {
             crc ^= pktData[i];
         }
         pktView.setUint8(gConst.CRC_IDX, crc);
 
         msgIdx = 0;
         slMsgBuf[msgIdx++] = gConst.SL_START_CHAR;
-        for(i = 0; i < msgLen; i++) {
-            if(pktData[i] < 0x10){
+        for (i = 0; i < msgLen; i++) {
+            if (pktData[i] < 0x10) {
                 pktData[i] ^= 0x10;
                 slMsgBuf[msgIdx++] = gConst.SL_ESC_CHAR;
             }
@@ -737,7 +686,7 @@ export class PortService implements OnDestroy{
 
         let slMsgLen = msgIdx;
         let slMsg = slMsgBuf.slice(0, slMsgLen);
-        this.slPort.write(slMsg, "utf8", ()=>{
+        this.slPort.write(slMsg, 'utf8', () => {
             // ---
         });
     }
@@ -748,11 +697,10 @@ export class PortService implements OnDestroy{
      * brief
      *
      */
-    private reqBindsAtIdx(){
-
+    private reqBindsAtIdx() {
         let hostCmd = this.hostCmdQueue[0];
 
-        if(hostCmd.shortAddr == undefined){
+        if (hostCmd.shortAddr == undefined) {
             console.log('----- REQ_BINDS_AT_IDX HOST UNDEFINED -----');
             return; // EMBEDDED RETURN
         }
@@ -766,7 +714,7 @@ export class PortService implements OnDestroy{
         let msgIdx = 0;
         pktView.setUint16(msgIdx, gConst.SL_MSG_READ_BINDS_AT_IDX, gConst.LE);
         msgIdx += 2;
-        msgIdx += (2 + 1); // len + crc
+        msgIdx += 2 + 1; // len + crc
         // cmd data
         pktView.setUint8(msgIdx++, this.seqNum);
         pktView.setUint16(msgIdx, hostCmd.shortAddr, gConst.LE);
@@ -777,15 +725,15 @@ export class PortService implements OnDestroy{
         let dataLen = msgLen - gConst.HEAD_LEN;
         pktView.setUint16(gConst.LEN_IDX, dataLen, gConst.LE);
         let crc = 0;
-        for(i = 0; i < msgLen; i++){
+        for (i = 0; i < msgLen; i++) {
             crc ^= pktData[i];
         }
         pktView.setUint8(gConst.CRC_IDX, crc);
 
         msgIdx = 0;
         slMsgBuf[msgIdx++] = gConst.SL_START_CHAR;
-        for(i = 0; i < msgLen; i++) {
-            if(pktData[i] < 0x10){
+        for (i = 0; i < msgLen; i++) {
+            if (pktData[i] < 0x10) {
                 pktData[i] ^= 0x10;
                 slMsgBuf[msgIdx++] = gConst.SL_ESC_CHAR;
             }
@@ -795,7 +743,7 @@ export class PortService implements OnDestroy{
 
         let slMsgLen = msgIdx;
         let slMsg = slMsgBuf.slice(0, slMsgLen);
-        this.slPort.write(slMsg, "utf8", ()=>{
+        this.slPort.write(slMsg, 'utf8', () => {
             // ---
         });
     }
@@ -806,17 +754,16 @@ export class PortService implements OnDestroy{
      * brief
      *
      */
-    wrBinds(binds: string){
-
+    wrBinds(binds: string) {
         let cmd: gIF.hostCmd_t = {
-            shortAddr: 0,   // not used
+            shortAddr: 0, // not used
             type: gConst.WR_BINDS,
-            idx: 0,         // not used
+            idx: 0, // not used
             retryCnt: gConst.RD_HOST_RETRY_CNT,
-            param: binds
+            param: binds,
         };
         this.hostCmdQueue.push(cmd);
-        if(this.hostCmdFlag == false){
+        if (this.hostCmdFlag == false) {
             this.hostCmdFlag = true;
             this.runHostCmd();
         }
@@ -828,8 +775,7 @@ export class PortService implements OnDestroy{
      * brief
      *
      */
-    private wrBindsReq(){
-
+    private wrBindsReq() {
         let hostCmd = this.hostCmdQueue[0];
         let bindSrc: gIF.hostedBinds_t = JSON.parse(hostCmd.param);
 
@@ -844,7 +790,7 @@ export class PortService implements OnDestroy{
         msgIdx = 0;
         pktView.setUint16(msgIdx, gConst.SL_MSG_WRITE_SRC_BINDS, gConst.LE);
         msgIdx += 2;
-        msgIdx += (2 + 1); // len + crc
+        msgIdx += 2 + 1; // len + crc
         // cmd data
         pktView.setUint8(msgIdx++, this.seqNum);
         pktView.setUint16(msgIdx, bindSrc.hostShortAddr, gConst.LE);
@@ -858,26 +804,26 @@ export class PortService implements OnDestroy{
         msgIdx += 1; // bindsLen;
         let lenStart = msgIdx;
         pktView.setUint8(msgIdx++, bindSrc.bindsDst.length);
-        for(i = 0; i < bindSrc.bindsDst.length; i++){
+        for (i = 0; i < bindSrc.bindsDst.length; i++) {
             pktView.setFloat64(msgIdx, bindSrc.bindsDst[i].dstExtAddr, gConst.LE);
             msgIdx += 8;
             pktView.setUint8(msgIdx++, bindSrc.bindsDst[i].dstEP);
         }
 
         let msgLen = msgIdx;
-        pktView.setUint8(bindsLenIdx, (msgLen - lenStart)); // update len field
+        pktView.setUint8(bindsLenIdx, msgLen - lenStart); // update len field
         let dataLen = msgLen - gConst.HEAD_LEN;
         pktView.setUint16(gConst.LEN_IDX, dataLen, gConst.LE);
         let crc = 0;
-        for(i = 0; i < msgLen; i++){
+        for (i = 0; i < msgLen; i++) {
             crc ^= pktData[i];
         }
         pktView.setUint8(gConst.CRC_IDX, crc);
 
         msgIdx = 0;
         slMsgBuf[msgIdx++] = gConst.SL_START_CHAR;
-        for(i = 0; i < msgLen; i++) {
-            if(pktData[i] < 0x10){
+        for (i = 0; i < msgLen; i++) {
+            if (pktData[i] < 0x10) {
                 pktData[i] ^= 0x10;
                 slMsgBuf[msgIdx++] = gConst.SL_ESC_CHAR;
             }
@@ -887,7 +833,7 @@ export class PortService implements OnDestroy{
 
         let slMsgLen = msgIdx;
         let slMsg = slMsgBuf.slice(0, slMsgLen);
-        this.slPort.write(slMsg, "utf8", ()=>{
+        this.slPort.write(slMsg, 'utf8', () => {
             // ---
         });
     }
@@ -898,17 +844,16 @@ export class PortService implements OnDestroy{
      * brief
      *
      */
-    udpZclCmd(zclCmd: string){
-
+    udpZclCmd(zclCmd: string) {
         let cmd: gIF.hostCmd_t = {
-            shortAddr: 0,   // not used
+            shortAddr: 0, // not used
             type: gConst.ZCL_CMD,
-            idx: 0,         // not used
+            idx: 0, // not used
             retryCnt: 0,
-            param: zclCmd
+            param: zclCmd,
         };
         this.hostCmdQueue.push(cmd);
-        if(this.hostCmdFlag == false){
+        if (this.hostCmdFlag == false) {
             this.hostCmdFlag = true;
             this.runHostCmd();
         }
@@ -920,8 +865,7 @@ export class PortService implements OnDestroy{
      * brief
      *
      */
-    private udpZclReq(){
-
+    private udpZclReq() {
         let hostCmd = this.hostCmdQueue[0];
         let req: gIF.udpZclReq_t = JSON.parse(hostCmd.param);
 
@@ -936,7 +880,7 @@ export class PortService implements OnDestroy{
         msgIdx = 0;
         pktView.setUint16(msgIdx, gConst.SL_MSG_ZCL_CMD, gConst.LE);
         msgIdx += 2;
-        msgIdx += (2 + 1); // len + crc
+        msgIdx += 2 + 1; // len + crc
         // cmd data
         pktView.setUint8(msgIdx++, this.seqNum);
         pktView.setUint16(msgIdx, req.shortAddr, gConst.LE);
@@ -946,22 +890,22 @@ export class PortService implements OnDestroy{
         msgIdx += 2;
         pktView.setUint8(msgIdx++, req.hasRsp);
         pktView.setUint8(msgIdx++, req.cmdLen);
-        for(let i = 0; i < req.cmdLen; i++){
+        for (let i = 0; i < req.cmdLen; i++) {
             pktView.setUint8(msgIdx++, req.cmd[i]);
         }
         let msgLen = msgIdx;
         let dataLen = msgLen - gConst.HEAD_LEN;
         pktView.setUint16(gConst.LEN_IDX, dataLen, gConst.LE);
         let crc = 0;
-        for(i = 0; i < msgLen; i++){
+        for (i = 0; i < msgLen; i++) {
             crc ^= pktData[i];
         }
         pktView.setUint8(gConst.CRC_IDX, crc);
 
         msgIdx = 0;
         slMsgBuf[msgIdx++] = gConst.SL_START_CHAR;
-        for(i = 0; i < msgLen; i++) {
-            if(pktData[i] < 0x10){
+        for (i = 0; i < msgLen; i++) {
+            if (pktData[i] < 0x10) {
                 pktData[i] ^= 0x10;
                 slMsgBuf[msgIdx++] = gConst.SL_ESC_CHAR;
             }
@@ -971,7 +915,7 @@ export class PortService implements OnDestroy{
 
         let slMsgLen = msgIdx;
         let slMsg = slMsgBuf.slice(0, slMsgLen);
-        this.slPort.write(slMsg, "utf8", ()=>{
+        this.slPort.write(slMsg, 'utf8', () => {
             // ---
         });
     }
@@ -981,25 +925,16 @@ export class PortService implements OnDestroy{
      *
      * brief
      *
-     */
+     *
     private extToHex(extAddr: number) {
-
         let ab = new ArrayBuffer(8);
         let dv = new DataView(ab);
         dv.setFloat64(0, extAddr);
         let extHex = [];
-        for(let i = 0; i < 8; i++){
+        for (let i = 0; i < 8; i++) {
             extHex[i] = ('0' + dv.getUint8(i).toString(16)).slice(-2);
         }
         return extHex.join(':');
     }
-
+    */
 }
-
-
-
-
-
-
-
-
