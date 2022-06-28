@@ -1,8 +1,8 @@
-import {Injectable, NgZone, OnDestroy} from '@angular/core';
-import {StorageService} from './storage.service';
-import {PortService} from './port.service';
-import {EventsService} from './events.service';
-import {UtilsService} from './utils.service';
+import { Injectable, NgZone, OnDestroy } from '@angular/core';
+import { StorageService } from './storage.service';
+import { PortService } from './port.service';
+import { EventsService } from './events.service';
+import { UtilsService } from './utils.service';
 import * as gConst from '../gConst';
 import * as gIF from '../gIF';
 
@@ -10,18 +10,17 @@ import * as gIF from '../gIF';
     providedIn: 'root',
 })
 export class SerialLinkService implements OnDestroy {
+
     delTest: number;
 
     setMap = new Map();
 
-    constructor(
-        private events: EventsService,
-        private port: PortService,
-        private storage: StorageService,
-        private utils: UtilsService,
-        private ngZone: NgZone
-    ) {
-        setTimeout(() => {
+    constructor(private events: EventsService,
+                private port: PortService,
+                private storage: StorageService,
+                private utils: UtilsService,
+                private ngZone: NgZone) {
+        setTimeout(()=>{
             this.initApp();
         }, 100);
     }
@@ -33,26 +32,27 @@ export class SerialLinkService implements OnDestroy {
      *
      */
     initApp() {
+
         this.storage.readAllKeys();
 
-        this.events.subscribe('attr_set', (attrSet) => {
-            this.ngZone.run(() => {
+        this.events.subscribe('attr_set', (attrSet)=>{
+            this.ngZone.run(()=>{
                 this.parseAttrSet(JSON.parse(attrSet));
             });
         });
-        this.events.subscribe('src_binds', (binds) => {
+        this.events.subscribe('src_binds', (binds)=>{
             this.addSrcBinds(JSON.parse(binds));
         });
 
         this.port.checkCom();
 
-        setTimeout(() => {
+        setTimeout(()=>{
             this.cleanAgedAttribs();
         }, 60000);
-        setTimeout(() => {
+        setTimeout(()=>{
             this.cleanAgedBinds();
         }, 60000);
-        setTimeout(() => {
+        setTimeout(()=>{
             this.cleanAgedSets();
         }, 60000);
     }
@@ -84,20 +84,20 @@ export class SerialLinkService implements OnDestroy {
      *
      */
     private parseAttrSet(attrSet: gIF.attrSet_t) {
-        if (attrSet.hostShortAddr == undefined) {
+
+        if(attrSet.hostShortAddr == undefined) {
             console.log('--- ATTR HOST ADDR UNDEFINED ---');
             return; // EMBEDDED RETURN
         }
         let now = Math.round(Date.now() / 1000);
         let attrSpec = this.getAttrSpec(attrSet);
-        for (let i = 0; i < attrSpec.length; i++) {
+        for(let i = 0; i < attrSpec.length; i++) {
             let spec = attrSpec[i];
-            if (spec.isVisible == true) {
+            if(spec.isVisible == true) {
                 let storedAttr: gIF.storedAttr_t;
                 let newVal = {} as gIF.hostedAttr_t;
                 let currVal: gIF.hostedAttr_t;
                 let key: string;
-
                 newVal.shortAddr = attrSet.shortAddr;
                 newVal.endPoint = attrSet.endPoint;
                 newVal.clusterID = attrSet.clusterID;
@@ -105,7 +105,7 @@ export class SerialLinkService implements OnDestroy {
                 newVal.attrID = spec.attrID;
                 key = this.storage.attrKey(newVal);
                 currVal = this.storage.attrMap.get(key);
-                if (currVal) {
+                if(currVal) {
                     currVal.timestamp = spec.timestamp;
                     currVal.hostShortAddr = attrSet.hostShortAddr;
                     currVal.partNum = attrSet.partNum;
@@ -113,24 +113,29 @@ export class SerialLinkService implements OnDestroy {
                     currVal.extAddr = attrSet.extAddr;
                     currVal.isValid = true;
                     currVal.formatedVal = spec.formatedVal;
-                    if (spec.hasHistory) {
-                        this.dataHistory(spec.timestamp, spec.attrVal, currVal);
+                    if(spec.hasHistory) {
+                        this.dataHistory(spec.timestamp,
+                                         spec.attrVal,
+                                         currVal);
                     }
                 } else {
                     newVal.drag = false;
                     newVal.isSel = false;
                     newVal.timestamp = now;
                     storedAttr = this.storage.nvAttrMap.get(key);
-                    if (storedAttr) {
+                    if(storedAttr) {
                         newVal.pos = storedAttr.pos;
                         newVal.name = storedAttr.attrName;
                         newVal.style = storedAttr.style;
                         newVal.valCorr = storedAttr.valCorr;
-                    } else {
+                    }
+                    else {
                         newVal.pos = {x: 0, y: 0};
                         newVal.name = 'no name';
                         newVal.style = gConst.NG_STYLE;
-                        newVal.valCorr = {units: gConst.DEG_C, slope: 1, offset: 0};
+                        newVal.valCorr = {units: gConst.DEG_C,
+                                          slope: 1,
+                                          offset: 0};
                     }
                     newVal.hostShortAddr = attrSet.hostShortAddr;
                     newVal.partNum = attrSet.partNum;
@@ -141,8 +146,10 @@ export class SerialLinkService implements OnDestroy {
                     newVal.formatedVal = spec.formatedVal;
                     newVal.timestamps = [];
                     newVal.attrVals = [];
-                    if (spec.hasHistory) {
-                        this.dataHistory(now, spec.attrVal, newVal);
+                    if(spec.hasHistory) {
+                        this.dataHistory(now,
+                                         spec.attrVal,
+                                         newVal);
                     }
                     this.storage.attrMap.set(key, newVal);
                 }
@@ -158,18 +165,19 @@ export class SerialLinkService implements OnDestroy {
      *
      */
     private cleanAgedAttribs() {
+
         let diff: number;
         let now = Math.round(Date.now() / 1000);
-        for (let [key, val] of this.storage.attrMap) {
+        for(let [key, val] of this.storage.attrMap) {
             diff = now - val.timestamp;
-            if (diff > gConst.ATTR_TTL) {
+            if(diff > gConst.ATTR_TTL) {
                 this.storage.attrMap.delete(key);
             }
-            if (diff > gConst.ATTR_VALID_TTL) {
+            if(diff > gConst.ATTR_VALID_TTL) {
                 val.isValid = false;
             }
         }
-        setTimeout(() => {
+        setTimeout(()=>{
             this.cleanAgedAttribs();
         }, 60000); // 60 seconds
     }
@@ -181,6 +189,7 @@ export class SerialLinkService implements OnDestroy {
      *
      */
     private addSrcBinds(srcBinds: gIF.srcBinds_t) {
+
         if (srcBinds.hostShortAddr == undefined) {
             console.log('--- BINDS HOST ADDR UNDEFINED ---');
             return;
@@ -196,19 +205,21 @@ export class SerialLinkService implements OnDestroy {
         newVal.clusterID = srcBinds.clusterID;
         key = this.storage.bindsKey(newVal);
         currVal = this.storage.bindsMap.get(key);
-        if (currVal) {
+        if(currVal) {
             currVal.timestamp = now;
             currVal.partNum = srcBinds.partNum;
             currVal.hostShortAddr = srcBinds.hostShortAddr;
             currVal.extAddr = srcBinds.extAddr;
             currVal.maxBinds = srcBinds.maxBinds;
             currVal.bindsDst = JSON.parse(JSON.stringify(srcBinds.bindsDst));
-        } else {
+        }
+        else {
             newVal.timestamp = now;
             storedBinds = this.storage.nvBindsMap.get(key);
-            if (storedBinds) {
+            if(storedBinds) {
                 newVal.name = storedBinds.bindsName;
-            } else {
+            }
+            else {
                 newVal.name = 'no name';
             }
             newVal.partNum = srcBinds.partNum;
@@ -219,14 +230,11 @@ export class SerialLinkService implements OnDestroy {
             this.storage.bindsMap.set(key, newVal);
         }
         let msg = '';
-        msg += `rx binds -> hostShortAddr: 0x${srcBinds.hostShortAddr
-            .toString(16)
-            .padStart(4, '0')
-            .toUpperCase()},`;
+        msg += `rx binds -> hostShortAddr: 0x${srcBinds.hostShortAddr.toString(16).padStart(4, '0').toUpperCase()},`;
         msg += ` srcAddr: 0x${srcBinds.srcShortAddr.toString(16).padStart(4, '0').toUpperCase()},`;
         msg += ` srcEP: ${srcBinds.srcEP},`;
         msg += ` cluster: 0x${srcBinds.clusterID.toString(16).padStart(4, '0').toUpperCase()} -> [`;
-        for (let i = 0; i < srcBinds.bindsDst.length; i++) {
+        for(let i = 0; i < srcBinds.bindsDst.length; i++) {
             msg += ` dstExtAddr: ${this.utils.extToHex(srcBinds.bindsDst[i].dstExtAddr)},`;
             msg += ` dstEP: ${srcBinds.bindsDst[i].dstEP}`;
         }
@@ -243,13 +251,13 @@ export class SerialLinkService implements OnDestroy {
     private cleanAgedBinds() {
         let diff: number;
         let now = Math.round(Date.now() / 1000);
-        for (let [key, val] of this.storage.bindsMap) {
+        for(let [key, val] of this.storage.bindsMap) {
             diff = now - val.timestamp;
-            if (diff > gConst.BINDS_TTL) {
+            if(diff > gConst.BINDS_TTL) {
                 this.storage.bindsMap.delete(key);
             }
         }
-        setTimeout(() => {
+        setTimeout(()=>{
             this.cleanAgedBinds();
         }, 60000);
     }
@@ -301,7 +309,7 @@ export class SerialLinkService implements OnDestroy {
      *
      */
     private corrVal(val: number, corr: gIF.valCorr_t) {
-        switch (corr.units) {
+        switch(corr.units) {
             case gConst.DEG_F: {
                 val = (val * 9.0) / 5.0 + 32.0;
                 break;
@@ -323,20 +331,23 @@ export class SerialLinkService implements OnDestroy {
      * brief
      *
      */
-    private dataHistory(timestamp: number, val: number, attr: gIF.hostedAttr_t) {
+    private dataHistory(timestamp: number,
+                        val: number,
+                        attr: gIF.hostedAttr_t) {
         let len = attr.timestamps.length;
-        if (len > 0) {
+        if(len > 0) {
             let lastTime = attr.timestamps[len - 1];
-            if (timestamp - lastTime > 60) {
+            if(timestamp - lastTime > 60) {
                 attr.timestamps.push(timestamp);
                 attr.attrVals.push(val);
                 len++;
-                if (len > 10) {
+                if(len > 10) {
                     attr.timestamps.shift();
                     attr.attrVals.shift();
                 }
             }
-        } else {
+        }
+        else {
             attr.timestamps.push(timestamp);
             attr.attrVals.push(val);
         }
@@ -349,10 +360,11 @@ export class SerialLinkService implements OnDestroy {
      *
      */
     private getAttrSpec(attrSet: gIF.attrSet_t): gIF.attrSpec_t[] {
+
         let attrSpecs: gIF.attrSpec_t[] = [];
         let valsBuff = new ArrayBuffer(64);
         let valsData = new Uint8Array(valsBuff);
-        for (let i = 0; i < attrSet.valsLen; i++) {
+        for(let i = 0; i < attrSet.valsLen; i++) {
             valsData[i] = attrSet.attrVals[i];
         }
         let valsView = new DataView(valsBuff);
@@ -367,7 +379,7 @@ export class SerialLinkService implements OnDestroy {
         let units: number;
         let idx: number;
 
-        switch (attrSet.partNum) {
+        switch(attrSet.partNum) {
             case gConst.HTU21D_005_T: {
                 idx = 0;
                 let temp = valsView.getInt16(idx, gConst.LE);
@@ -378,16 +390,18 @@ export class SerialLinkService implements OnDestroy {
                 nvAttr = this.storage.nvAttrMap.get(key);
                 attrName = '';
                 units = gConst.DEG_C;
-                if (nvAttr) {
+                if(nvAttr) {
                     attrName = nvAttr.attrName;
                     units = nvAttr.valCorr.units;
                     temp = this.corrVal(temp, nvAttr.valCorr);
-                    if (units == gConst.DEG_F) {
+                    if(units == gConst.DEG_F) {
                         formatedVal = `${temp.toFixed(1)} °F`;
-                    } else {
+                    }
+                    else {
                         formatedVal = `${temp.toFixed(1)} °C`;
                     }
-                } else {
+                }
+                else {
                     formatedVal = `${temp.toFixed(1)} °C`;
                 }
                 setVals = {
@@ -416,7 +430,7 @@ export class SerialLinkService implements OnDestroy {
                 key = this.getKey(attrSet, attrID);
                 nvAttr = this.storage.nvAttrMap.get(key);
                 attrName = '';
-                if (nvAttr) {
+                if(nvAttr) {
                     attrName = nvAttr.attrName;
                     rh = this.corrVal(rh, nvAttr.valCorr);
                 }
@@ -444,7 +458,7 @@ export class SerialLinkService implements OnDestroy {
                 key = this.getKey(attrSet, attrID);
                 nvAttr = this.storage.nvAttrMap.get(key);
                 attrName = '';
-                if (nvAttr) {
+                if(nvAttr) {
                     attrName = nvAttr.attrName;
                 }
                 setVals = {
@@ -473,16 +487,18 @@ export class SerialLinkService implements OnDestroy {
                 nvAttr = this.storage.nvAttrMap.get(key);
                 attrName = '';
                 units = gConst.DEG_C;
-                if (nvAttr) {
+                if(nvAttr) {
                     attrName = nvAttr.attrName;
                     units = nvAttr.valCorr.units;
                     temp = this.corrVal(temp, nvAttr.valCorr);
-                    if (units == gConst.DEG_F) {
+                    if(units == gConst.DEG_F) {
                         formatedVal = `${temp.toFixed(1)} °F`;
-                    } else {
+                    }
+                    else {
                         formatedVal = `${temp.toFixed(1)} °C`;
                     }
-                } else {
+                }
+                else {
                     formatedVal = `${temp.toFixed(1)} °C`;
                 }
                 setVals = {
@@ -511,7 +527,7 @@ export class SerialLinkService implements OnDestroy {
                 key = this.getKey(attrSet, attrID);
                 nvAttr = this.storage.nvAttrMap.get(key);
                 attrName = '';
-                if (nvAttr) {
+                if(nvAttr) {
                     attrName = nvAttr.attrName;
                     rh = this.corrVal(rh, nvAttr.valCorr);
                 }
@@ -541,16 +557,18 @@ export class SerialLinkService implements OnDestroy {
                 nvAttr = this.storage.nvAttrMap.get(key);
                 attrName = '';
                 units = gConst.M_BAR;
-                if (nvAttr) {
+                if(nvAttr) {
                     attrName = nvAttr.attrName;
                     units = nvAttr.valCorr.units;
                     press = this.corrVal(press, nvAttr.valCorr);
-                    if (units == gConst.IN_HG) {
+                    if(units == gConst.IN_HG) {
                         formatedVal = `${press.toFixed(1)} mmHg`;
-                    } else {
+                    }
+                    else {
                         formatedVal = `${press.toFixed(1)} mBar`;
                     }
-                } else {
+                }
+                else {
                     formatedVal = `${press.toFixed(1)} mBar`;
                 }
                 setVals = {
@@ -578,7 +596,7 @@ export class SerialLinkService implements OnDestroy {
                 key = this.getKey(attrSet, attrID);
                 nvAttr = this.storage.nvAttrMap.get(key);
                 attrName = '';
-                if (nvAttr) {
+                if(nvAttr) {
                     attrName = nvAttr.attrName;
                 }
                 setVals = {
@@ -604,7 +622,7 @@ export class SerialLinkService implements OnDestroy {
                 key = this.getKey(attrSet, attrID);
                 nvAttr = this.storage.nvAttrMap.get(key);
                 attrName = '';
-                if (nvAttr) {
+                if(nvAttr) {
                     attrName = nvAttr.attrName;
                 }
                 setVals = {
@@ -632,11 +650,11 @@ export class SerialLinkService implements OnDestroy {
                 key = this.getKey(attrSet, attrID);
                 nvAttr = this.storage.nvAttrMap.get(key);
                 attrName = '';
-                if (nvAttr) {
+                if(nvAttr) {
                     attrName = nvAttr.attrName;
                 }
                 formatedVal = 'off';
-                if (!!state) {
+                if(!!state) {
                     formatedVal = `on (${level}%)`;
                 }
                 setVals = {
@@ -664,7 +682,7 @@ export class SerialLinkService implements OnDestroy {
                 key = this.getKey(attrSet, attrID);
                 nvAttr = this.storage.nvAttrMap.get(key);
                 attrName = '';
-                if (nvAttr) {
+                if(nvAttr) {
                     attrName = nvAttr.attrName;
                 }
                 setVals = {
@@ -708,32 +726,21 @@ export class SerialLinkService implements OnDestroy {
      *
      */
     attrSetKey(params: any) {
+
+        let key = `set-${params.shortAddr.toString(16).padStart(4, '0').toUpperCase()}`;
+        key += `:${params.endPoint.toString(16).padStart(2, '0').toUpperCase()}`;
+        key += `:${params.clusterID.toString(16).padStart(4, '0').toUpperCase()}`;
+        key += `:${params.attrSetID.toString(16).padStart(4, '0').toUpperCase()}`;
+        /*
         let key = 'set-';
         key += ('000' + params.shortAddr.toString(16)).slice(-4).toUpperCase() + ':';
         key += ('0' + params.endPoint.toString(16)).slice(-2).toUpperCase() + ':';
         key += ('000' + params.clusterID.toString(16)).slice(-4).toUpperCase() + ':';
         key += ('000' + params.attrSetID.toString(16)).slice(-4).toUpperCase();
-
+        */
         return key;
     }
 
-    /***********************************************************************************************
-     * fn          extToHex
-     *
-     * brief
-     *
-     *
-    extToHex(extAddr: number) {
-        let ab = new ArrayBuffer(8);
-        let dv = new DataView(ab);
-        dv.setFloat64(0, extAddr);
-        let extHex = [];
-        for (let i = 0; i < 8; i++) {
-            extHex[i] = ('0' + dv.getUint8(i).toString(16)).slice(-2);
-        }
-        return extHex.join(':');
-    }
-    */
     /***********************************************************************************************
      * fn          cleanAgedSets
      *
@@ -743,13 +750,13 @@ export class SerialLinkService implements OnDestroy {
     private cleanAgedSets() {
         let diff: number;
         let now = Math.round(Date.now() / 1000);
-        for (let [key, val] of this.setMap) {
+        for(let [key, val] of this.setMap) {
             diff = now - val.timestamp;
-            if (diff > gConst.SET_TTL) {
+            if(diff > gConst.SET_TTL) {
                 this.setMap.delete(key);
             }
         }
-        setTimeout(() => {
+        setTimeout(()=>{
             this.cleanAgedSets();
         }, 60000); // 60 seconds
     }

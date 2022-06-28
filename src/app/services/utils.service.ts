@@ -61,10 +61,10 @@ export class UtilsService {
 
     public timeStamp() {
         const now = new Date();
-        return `<${now.getHours().toString(10).padStart(2, '0')}:${now.getMinutes().toString(10).padStart(2, '0')}:${now
-            .getSeconds()
-            .toString(10)
-            .padStart(2, '0')}>`;
+        const hours = now.getHours().toString(10).padStart(2, '0');
+        const minutes = now.getMinutes().toString(10).padStart(2, '0');
+        const seconds = now.getSeconds().toString(10).padStart(2, '0');
+        return `<${hours}:${minutes}:${seconds}>`;
     }
 
     public strToByteArr(str: string): number[] {

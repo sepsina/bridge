@@ -214,7 +214,7 @@ export interface dns_t {
 
 export interface slMsg_t {
     type: number;
-    msg: number[];
+    data: number[];
 }
 
 export interface hostCmd_t {
