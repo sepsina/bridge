@@ -49,7 +49,7 @@
                    type="text"
                    placeholder="color"
                    [formControl]="formGroup.get('color')"
-                   (ngModelChange)="colorChange()">
+                   (change)="colorChange($event)">
             <mat-hint align="end">text color</mat-hint>
             <mat-error *ngIf="formGroup.get('color').invalid">{{colorErr()}}</mat-error>
         </mat-form-field>
@@ -58,7 +58,7 @@
                    type="text"
                    placeholder="background-color"
                    [formControl]="formGroup.get('bgColor')"
-                   (ngModelChange)="bgColorChange()">
+                   (change)="bgColorChange($event)">
             <mat-hint align="end">background color</mat-hint>
             <mat-error *ngIf="formGroup.get('bgColor').invalid">{{bgColorErr()}}</mat-error>
         </mat-form-field>
@@ -68,7 +68,7 @@
                    [max]="maxFontSize"
                    placeholder="font size"
                    [formControl]="formGroup.get('fontSize')"
-                   (ngModelChange)="fontSizeChange()">
+                   (change)="fontSizeChange($event)">
             <mat-hint align="end">text size, max {{maxFontSize}}px</mat-hint>
             <mat-error *ngIf="formGroup.get('fontSize').invalid">{{fontSizeErr()}}</mat-error>
         </mat-form-field>
@@ -78,7 +78,7 @@
                        type="text"
                        placeholder="border-color"
                        [formControl]="formGroup.get('borderColor')"
-                       (ngModelChange)="borderColorChange()">
+                       (change)="borderColorChange($event)">
                 <mat-hint align="end">frame color</mat-hint>
                 <mat-error *ngIf="formGroup.get('borderColor').invalid">{{borderColorErr()}}</mat-error>
             </mat-form-field>
@@ -88,7 +88,7 @@
                        [max]="maxBorderWidth"
                        placeholder="border-width"
                        [formControl]="formGroup.get('borderWidth')"
-                       (ngModelChange)="borderWidthChange()">
+                       (change)="borderWidthChange($event)">
                 <mat-hint align="end">frame line width, max {{maxBorderWidth}}px</mat-hint>
                 <mat-error *ngIf="formGroup.get('borderWidth').invalid">{{borderWidthErr()}}</mat-error>
             </mat-form-field>
@@ -97,7 +97,7 @@
                        type="text"
                        placeholder="border-style"
                        [formControl]="formGroup.get('borderStyle')"
-                       (ngModelChange)="borderStyleChange()">
+                       (change)="borderStyleChange($event)">
                 <mat-hint align="end">frame line style</mat-hint>
                 <mat-error *ngIf="formGroup.get('borderStyle').invalid">{{borderStyleErr()}}</mat-error>
             </mat-form-field>
@@ -107,7 +107,7 @@
                        [max]="maxBorderRadius"
                        placeholder="border-radius"
                        [formControl]="formGroup.get('borderRadius')"
-                       (ngModelChange)="borderRadiusChange()">
+                       (change)="borderRadiusChange($event)">
                 <mat-hint align="end">rounded corners radius, max {{maxBorderRadius}}px</mat-hint>
                 <mat-error *ngIf="formGroup.get('borderRadius').invalid">{{borderRadiusErr()}}</mat-error>
             </mat-form-field>
@@ -119,7 +119,7 @@
                        [max]="maxPaddingTop"
                        placeholder="padding-top"
                        [formControl]="formGroup.get('paddingTop')"
-                       (ngModelChange)="paddingTopChange()">
+                       (change)="paddingTopChange($event)">
                 <mat-hint align="end">top padding, max {{maxPaddingTop}}px</mat-hint>
                 <mat-error *ngIf="formGroup.get('paddingTop').invalid">{{paddingTopErr()}}</mat-error>
             </mat-form-field>
@@ -129,7 +129,7 @@
                        [max]="maxPaddingRight"
                        placeholder="padding-right"
                        [formControl]="formGroup.get('paddingRight')"
-                       (ngModelChange)="paddingRightChange()">
+                       (change)="paddingRightChange($event)">
                 <mat-hint align="end">right padding, max {{maxPaddingRight}}px</mat-hint>
                 <mat-error *ngIf="formGroup.get('paddingRight').invalid">{{paddingRightErr()}}</mat-error>
             </mat-form-field>
@@ -139,7 +139,7 @@
                        [max]="maxPaddingBottom"
                        placeholder="padding-bottom"
                        [formControl]="formGroup.get('paddingBottom')"
-                       (ngModelChange)="paddingBottomChange()" >
+                       (change)="paddingBottomChange($event)" >
                 <mat-hint align="end">bottom padding, max {{maxPaddingBottom}}px</mat-hint>
                 <mat-error *ngIf="formGroup.get('paddingBottom').invalid">{{paddingBottomErr()}}</mat-error>
             </mat-form-field>
@@ -149,7 +149,7 @@
                        [max]="maxPaddingLeft"
                        placeholder="padding-left"
                        [formControl]="formGroup.get('paddingLeft')"
-                       (ngModelChange)="paddingLeftChange()">
+                       (change)="paddingLeftChange($event)">
                 <mat-hint align="end">left padding, max {{maxPaddingLeft}}px</mat-hint>
                 <mat-error *ngIf="formGroup.get('paddingLeft').invalid">{{paddingLeftErr()}}</mat-error>
             </mat-form-field>

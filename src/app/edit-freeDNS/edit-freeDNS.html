@@ -14,30 +14,27 @@
                    autocomplete="off"
                    type="text"
                    placeholder="user"
-                   [formControl]="userCtrl"
-                   (ngModelChange)="userChange()">
+                   [formControl]="userFormCtrl">
             <!--<mat-hint align="end">user</mat-hint>-->
-            <mat-error *ngIf="userCtrl.hasError('required')">{{userErr()}}</mat-error>
+            <mat-error *ngIf="userFormCtrl.hasError('required')">{{userErr()}}</mat-error>
         </mat-form-field>
         <mat-form-field>
             <input matInput
                    autocomplete="off"
                    type="text"
                    placeholder="password"
-                   [formControl]="pswCtrl"
-                   (ngModelChange)="pswChange()">
+                   [formControl]="pswFormCtrl">
             <!--<mat-hint align="end">freeDNS password</mat-hint>-->
-            <mat-error *ngIf="pswCtrl.hasError('required')">{{pswErr()}}</mat-error>
+            <mat-error *ngIf="pswFormCtrl.hasError('required')">{{pswErr()}}</mat-error>
         </mat-form-field>
         <mat-form-field>
             <input matInput
                    autocomplete="off"
                    type="text"
                    placeholder="domain"
-                   [formControl]="domainCtrl"
-                   (ngModelChange)="domainChange()">
+                   [formControl]="domainFormCtrl">
             <!--<mat-hint align="end">freeDNS domain</mat-hint>-->
-            <mat-error *ngIf="domainCtrl.hasError('required')">{{domainErr()}}</mat-error>
+            <mat-error *ngIf="domainFormCtrl.hasError('required')">{{domainErr()}}</mat-error>
         </mat-form-field>
     </div>
     <div class="cards-common" id="test-card">

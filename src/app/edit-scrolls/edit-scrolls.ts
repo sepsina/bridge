@@ -1,4 +1,4 @@
-import {Component, Inject, OnInit, AfterViewInit, ViewChild} from '@angular/core';
+import {Component, Inject, OnInit, AfterViewInit, ViewChild, NgZone} from '@angular/core';
 //import { nsService } from '../ns.service';
 import { EventsService } from '../services/events.service';
 import { Validators, FormControl } from '@angular/forms';
@@ -17,21 +17,23 @@ export class EditScrolls implements OnInit, AfterViewInit {
 
     @ViewChild('selList') selList;
 
+    minPos = 0;
     maxPos = 100;
     maxDuration = 2000;
 
-    scrollCtrl = new FormControl('', Validators.required);
+    scrollFormCtrl = new FormControl('', Validators.required);
 
     scrolls: gIF.scroll_t[] = [];
     newIdx: number = 0;
 
-    nameCtrl = new FormControl('', Validators.required);
-    yPosCtrl = new FormControl(0, [Validators.required, Validators.max(this.maxPos)]);
-    durationCtrl = new FormControl(0, [Validators.required, Validators.max(this.maxDuration)]);
+    nameFormCtrl = new FormControl('', Validators.required);
+    yPosFormCtrl = new FormControl(0, [Validators.required, Validators.max(this.maxPos)]);
+    durationFormCtrl = new FormControl(0, [Validators.required, Validators.max(this.maxDuration)]);
 
     constructor(public dialogRef: MatDialogRef<EditScrolls>,
                 @Inject(MAT_DIALOG_DATA) public dlgData: any,
-                public events: EventsService) {
+                public events: EventsService,
+                public ngZone: NgZone) {
         // ---
     }
 
@@ -60,7 +62,13 @@ export class EditScrolls implements OnInit, AfterViewInit {
         setTimeout(() => {
             const scroll = this.scrolls[0];
             if(scroll) {
-                this.scrollCtrl.setValue(scroll);
+                this.ngZone.run(()=>{
+                    this.scrollFormCtrl.setValue(scroll);
+                    this.nameFormCtrl.setValue(scroll.name);
+                    this.yPosFormCtrl.setValue(scroll.yPos);
+                    this.durationFormCtrl.setValue(scroll.duration);
+                    this.yPosSet(scroll.yPos);
+                });
             }
         }, 0);
     }
@@ -89,7 +97,7 @@ export class EditScrolls implements OnInit, AfterViewInit {
      *
      */
     nameErr() {
-        if(this.nameCtrl.hasError('required')){
+        if(this.nameFormCtrl.hasError('required')){
             return 'You must enter a value';
         }
     }
@@ -100,10 +108,10 @@ export class EditScrolls implements OnInit, AfterViewInit {
      *
      */
     posErr() {
-        if(this.yPosCtrl.hasError('required')){
+        if(this.yPosFormCtrl.hasError('required')){
             return 'You must enter a value';
         }
-        if(this.yPosCtrl.hasError('max')){
+        if(this.yPosFormCtrl.hasError('max')){
             return sprintf('position must be less than %d %%', this.maxPos);
         }
     }
@@ -114,10 +122,10 @@ export class EditScrolls implements OnInit, AfterViewInit {
      *
      */
     durationErr() {
-        if(this.durationCtrl.hasError('required')){
+        if(this.durationFormCtrl.hasError('required')){
             return 'You must enter a value';
         }
-        if(this.durationCtrl.hasError('max')){
+        if(this.durationFormCtrl.hasError('max')){
             return sprintf('duration must be less than %d', this.maxDuration);
         }
     }
@@ -127,8 +135,9 @@ export class EditScrolls implements OnInit, AfterViewInit {
      * @brief
      *
      */
-    nameChange(name){
-        const scroll = this.scrollCtrl.value;
+    nameChange(event) {
+        let name = event.target.value;
+        const scroll = this.scrollFormCtrl.value;
         if(name){
             if(scroll){
                 scroll.name = name;
@@ -141,12 +150,31 @@ export class EditScrolls implements OnInit, AfterViewInit {
      * @brief
      *
      */
-    yPosChange(pos){
+    yPosChange(event) {
+
+        let pos = event.target.value;
+
+        this.yPosSet(pos);
+    }
+
+    /***********************************************************************************************
+     * @fn          yPosChange
+     *
+     * @brief
+     *
+     */
+    yPosSet(pos: number) {
+
+        if(pos < 0){
+            pos = 0;
+            this.yPosFormCtrl.setValue(0);
+        }
+
         if(pos > this.maxPos){
             return;
         }
         this.dlgData.scrollRef.scrollTo(0, pos * this.dlgData.imgDim.height / 100, 500);
-        const scroll = this.scrollCtrl.value;
+        const scroll = this.scrollFormCtrl.value;
         if(scroll){
             scroll.yPos = pos;
         }
@@ -157,11 +185,18 @@ export class EditScrolls implements OnInit, AfterViewInit {
      * @brief
      *
      */
-    durationChange(duration){
+    durationChange(event) {
+
+        let duration = event.target.value;
+
+        if(duration < 0){
+            duration = 0;
+        }
+
         if(duration > this.maxDuration){
             return;
         }
-        const scroll = this.scrollCtrl.value;
+        const scroll = this.scrollFormCtrl.value;
         if(scroll){
             scroll.duration = duration;
         }
@@ -179,7 +214,7 @@ export class EditScrolls implements OnInit, AfterViewInit {
         scroll.duration = 200;
 
         this.scrolls.push(scroll);
-        this.scrollCtrl.setValue(scroll);
+        this.scrollFormCtrl.setValue(scroll);
     }
     /***********************************************************************************************
      * @fn          delScroll
@@ -188,7 +223,7 @@ export class EditScrolls implements OnInit, AfterViewInit {
      *
      */
     delScroll(){
-        const scroll = this.scrollCtrl.value;
+        const scroll = this.scrollFormCtrl.value;
         let selIdx = this.scrolls.findIndex(item => item === scroll);
         if(selIdx > -1){
             this.scrolls.splice(selIdx, 1);
@@ -200,10 +235,10 @@ export class EditScrolls implements OnInit, AfterViewInit {
             }
             if(selIdx > -1){
                 const scroll = this.scrolls[selIdx];
-                this.scrollCtrl.setValue(scroll);
+                this.scrollFormCtrl.setValue(scroll);
             }
             else {
-                this.scrollCtrl.reset();
+                this.scrollFormCtrl.reset();
             }
         }
     }
@@ -214,7 +249,27 @@ export class EditScrolls implements OnInit, AfterViewInit {
      *
      */
     selChanged(event){
-        //console.log(event);
+        console.log(event);
+        this.yPosSet(event.value.yPos);
+    }
+
+    /***********************************************************************************************
+     * @fn          isInvalid
+     *
+     * @brief
+     *
+     */
+    isInvalid(){
+        if(this.nameFormCtrl.invalid){
+            return true;
+        }
+        if(this.yPosFormCtrl.invalid){
+            return true;
+        }
+        if(this.durationFormCtrl.invalid){
+            return true;
+        }
+        return false;
     }
 
 }

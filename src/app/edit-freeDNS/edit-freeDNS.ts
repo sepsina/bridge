@@ -31,10 +31,10 @@ export class EditFreeDNS implements OnInit, AfterViewInit {
 
     logs: httpRsp_t[] = [];
 
-    userCtrl = new FormControl('user', Validators.required);
-    pswCtrl = new FormControl('psw', Validators.required);
-    domainCtrl = new FormControl('domain', Validators.required);
-    tokenCtrl = new FormControl('token', Validators.required);
+    userFormCtrl = new FormControl('user', Validators.required);
+    pswFormCtrl = new FormControl('psw', Validators.required);
+    domainFormCtrl = new FormControl('domain', Validators.required);
+    tokenFormCtrl = new FormControl('token', Validators.required);
 
     constructor(public dialogRef: MatDialogRef<EditFreeDNS>,
                 @Inject(MAT_DIALOG_DATA) public dlgData: any,
@@ -72,9 +72,9 @@ export class EditFreeDNS implements OnInit, AfterViewInit {
         const dns = this.storage.getFreeDNS();
         if(dns){
             this.dns = dns;
-            this.userCtrl.setValue(this.dns.user);
-            this.pswCtrl.setValue(this.dns.psw);
-            this.domainCtrl.setValue(this.dns.domain);
+            this.userFormCtrl.setValue(this.dns.user);
+            this.pswFormCtrl.setValue(this.dns.psw);
+            this.domainFormCtrl.setValue(this.dns.domain);
         }
         else {
             console.log('no freeDNS');
@@ -87,9 +87,9 @@ export class EditFreeDNS implements OnInit, AfterViewInit {
      *
      */
     save() {
-        this.dns.user = this.userCtrl.value;
-        this.dns.psw = this.pswCtrl.value;
-        this.dns.domain = this.domainCtrl.value;
+        this.dns.user = this.userFormCtrl.value;
+        this.dns.psw = this.pswFormCtrl.value;
+        this.dns.domain = this.domainFormCtrl.value;
         this.dns.token = 'not-used';
 
         this.storage.setFreeDNS(this.dns);
@@ -111,7 +111,7 @@ export class EditFreeDNS implements OnInit, AfterViewInit {
      *
      */
     userErr() {
-        if(this.userCtrl.hasError('required')){
+        if(this.userFormCtrl.hasError('required')){
             return 'You must enter a value';
         }
     }
@@ -122,7 +122,7 @@ export class EditFreeDNS implements OnInit, AfterViewInit {
      *
      */
     pswErr() {
-        if(this.pswCtrl.hasError('required')){
+        if(this.pswFormCtrl.hasError('required')){
             return 'You must enter a value';
         }
     }
@@ -133,37 +133,9 @@ export class EditFreeDNS implements OnInit, AfterViewInit {
      *
      */
     domainErr() {
-        if(this.domainCtrl.hasError('required')){
+        if(this.domainFormCtrl.hasError('required')){
             return 'You must enter a value';
         }
-    }
-
-    /***********************************************************************************************
-     * @fn          userChange
-     *
-     * @brief
-     *
-     */
-    userChange(){
-        // ---
-    }
-    /***********************************************************************************************
-     * @fn          pswChange
-     *
-     * @brief
-     *
-     */
-    pswChange(){
-        // ---
-    }
-    /***********************************************************************************************
-     * @fn          domainChange
-     *
-     * @brief
-     *
-     */
-    domainChange(){
-        // ---
     }
 
     /***********************************************************************************************

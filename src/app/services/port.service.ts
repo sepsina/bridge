@@ -353,7 +353,7 @@ export class PortService {
             }
             case gConst.SL_MSG_LOG: {
                 let idx = msgData.indexOf(10);
-                if (idx > -1) {
+                if(idx > -1) {
                     msgData[idx] = 32;
                 }
                 console.log(String.fromCharCode.apply(null, msgData));

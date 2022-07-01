@@ -1,8 +1,8 @@
-import { Component, Inject, OnInit, AfterViewInit, ElementRef, NgZone, ViewChild } from '@angular/core';
+import { Component, Inject, OnInit, ElementRef, NgZone, ViewChild } from '@angular/core';
 import { SerialLinkService } from '../services/serial-link.service';
 import { StorageService } from '../services/storage.service';
+import { UtilsService } from '../services/utils.service';
 import { Validators, FormControl } from '@angular/forms';
-import { sprintf } from 'sprintf-js';
 import { MatSelectionListChange } from '@angular/material/list';
 import { MatSelectChange } from '@angular/material/select';
 import { MatTooltip } from '@angular/material/tooltip';
@@ -16,7 +16,7 @@ import * as gIF from '../gIF'
     templateUrl: './binds.page.html',
     styleUrls: ['./binds.page.scss'],
 })
-export class EditBinds implements OnInit, AfterViewInit {
+export class EditBinds implements OnInit {
 
     @ViewChild('free_binds') free_binds: ElementRef;
 
@@ -36,8 +36,8 @@ export class EditBinds implements OnInit, AfterViewInit {
     usedBindDstDesc: gIF.descVal_t[] = [];
     freeBindDstDesc: gIF.descVal_t[] = [];
 
-    emptyFlag: boolean = true;
-    noSrcBinds: boolean = true;
+    emptyFlag = true;
+    noSrcBinds = true;
 
     nameFormCtrl = new FormControl('', [Validators.required]);
 
@@ -45,6 +45,7 @@ export class EditBinds implements OnInit, AfterViewInit {
                 @Inject(MAT_DIALOG_DATA) public dlgData: any,
                 private serial: SerialLinkService,
                 private storage: StorageService,
+                private utils: UtilsService,
                 private ngZone: NgZone) {
         // ---
     }
@@ -60,21 +61,6 @@ export class EditBinds implements OnInit, AfterViewInit {
     }
 
     /***********************************************************************************************
-     * fn          ngAfterViewInit
-     *
-     * brief
-     *
-     */
-    ngAfterViewInit(): void {
-        // make cols same height
-        /*let wrBinds = document.getElementById('send_binds');
-        let wrBindsBottom = wrBinds.offsetTop + wrBinds.offsetHeight;
-        let freeBinds = document.getElementById('free_binds');
-        freeBinds.style.border = 'solid red 1px';
-        freeBinds.style.height = sprintf('%dpx', Math.round(wrBindsBottom - freeBinds.offsetTop));*/
-    }
-
-    /***********************************************************************************************
      * fn          refresh
      *
      * brief
@@ -86,7 +72,7 @@ export class EditBinds implements OnInit, AfterViewInit {
         let attribs: gIF.hostedAttr_t[] = JSON.parse(JSON.stringify(Array.from(this.storage.attrMap.values())));
 
         this.allBindDst = [];
-        attribs.forEach((attr)=>{
+        for(const attr of attribs) {
             if(attr.clusterServer){
                 let bind = {} as gIF.bind_t;
                 bind.valid = true;
@@ -98,11 +84,13 @@ export class EditBinds implements OnInit, AfterViewInit {
                 bind.endPoint = attr.endPoint;
                 this.allBindDst.push(bind);
             }
-        });
+        }
         if(this.allBindSrc.length){
             this.bindSrc = this.allBindSrc[0];
             this.nameFormCtrl.setValue(this.bindSrc.name);
-            this.setBinds(this.bindSrc);
+            this.ngZone.run(()=>{
+                this.setBinds(this.bindSrc);
+            });
             this.setBindSourceDesc(this.bindSrc);
             this.noSrcBinds = false;
         }
@@ -111,8 +99,6 @@ export class EditBinds implements OnInit, AfterViewInit {
             this.emptyFlag = true;
         }
         this.deSelAll();
-
-        console.log('all bind destination: ' + JSON.stringify(this.allBindDst));
     }
 
     /***********************************************************************************************
@@ -125,17 +111,21 @@ export class EditBinds implements OnInit, AfterViewInit {
 
         this.usedBindDst = [];
         this.freeBindDst = [];
-
-        this.allBindDst.forEach((bindDst)=>{
-            if(bindDst.clusterID == bindSrc.clusterID){
+        for(const bindDst of this.allBindDst) {
+            if(bindDst.clusterID === bindSrc.clusterID){
                 this.freeBindDst.push(bindDst);
             }
-        });
-        bindSrc.bindsDst.forEach((bindDst)=>{
+        }
+        for(const bindDst of bindSrc.bindsDst) {
             let idx = this.freeBindDst.findIndex((bind)=>{
-                return(bind.extAddr == bindDst.dstExtAddr &&
-                       bind.endPoint  == bindDst.dstEP &&
-                       bind.clusterID == bindSrc.clusterID);
+                if(bind.extAddr === bindDst.dstExtAddr) {
+                    if(bind.endPoint === bindDst.dstEP) {
+                        if(bind.clusterID === bindSrc.clusterID) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
             });
             if(idx > -1){
                 this.usedBindDst.push(this.freeBindDst[idx]);
@@ -147,13 +137,13 @@ export class EditBinds implements OnInit, AfterViewInit {
                 bind.name = 'unknown';
                 this.usedBindDst.push(bind);
             }
-        });
+        }
         let numBindSrc = 0;
-        this.allBindSrc.forEach((bind)=>{
-            if(bind.extAddr == bindSrc.extAddr){
+        for(const bind of this.allBindSrc) {
+            if(bind.extAddr === bindSrc.extAddr){
                 numBindSrc += bind.bindsDst.length;
             }
-        });
+        }
         this.emptyFlag = true;
         let numEmpty = 0;
         if(numBindSrc < bindSrc.maxBinds){
@@ -182,9 +172,6 @@ export class EditBinds implements OnInit, AfterViewInit {
             bind.name = '--- empty ---';
             this.freeBindDst.push(bind);
         }
-        console.log('numBindSrc: ' + numBindSrc);
-        console.log('numEmpty: ' + numEmpty);
-        console.log('numUsed: ' + numUsed);
     }
 
     /***********************************************************************************************
@@ -195,14 +182,13 @@ export class EditBinds implements OnInit, AfterViewInit {
      */
     public bindSrcSelected(event: MatSelectChange){
 
-        console.log('bind source selected: ' + JSON.stringify(this.bindSrc));
-
         this.nameFormCtrl.setValue(this.bindSrc.name);
         this.setBindSourceDesc(this.bindSrc);
 
         this.deSelAll();
-
-        this.setBinds(this.bindSrc);
+        this.ngZone.run(()=>{
+            this.setBinds(this.bindSrc);
+        });
     }
 
     /***********************************************************************************************
@@ -218,7 +204,7 @@ export class EditBinds implements OnInit, AfterViewInit {
         if(partDesc){
             let descVal = {} as gIF.descVal_t;
             descVal.key = 'S/N:';
-            descVal.value = this.extToHex(srcBind.extAddr);
+            descVal.value = this.utils.extToHex(srcBind.extAddr);
             this.bindSourceDesc.push(descVal);
             descVal = {} as gIF.descVal_t;
             descVal.key = 'node-name:';
@@ -228,10 +214,6 @@ export class EditBinds implements OnInit, AfterViewInit {
             descVal.key = 'label:';
             descVal.value = partDesc.part;
             this.bindSourceDesc.push(descVal);
-            /*descVal = {} as gIF.descVal_t;
-            descVal.key = 'url:';
-            descVal.value = partDesc.url;
-            this.bindSourceDesc.push(descVal);*/
         }
     }
 
@@ -243,10 +225,7 @@ export class EditBinds implements OnInit, AfterViewInit {
      */
     public usedBindDstChanged(event: MatSelectionListChange){
 
-        console.log('used bind dst selected: ' + JSON.stringify(event.option.value));
-
         this.selUsedBindDst = event.option.value;
-
         this.setUsedBindDstDesc(this.selUsedBindDst);
     }
 
@@ -263,7 +242,7 @@ export class EditBinds implements OnInit, AfterViewInit {
         if(partDesc){
             let descVal = {} as gIF.descVal_t;
             descVal.key = 'S/N:';
-            descVal.value = this.extToHex(dst.extAddr);
+            descVal.value = this.utils.extToHex(dst.extAddr);
             this.usedBindDstDesc.push(descVal);
             descVal = {} as gIF.descVal_t;
             descVal.key = 'node-name:';
@@ -273,10 +252,6 @@ export class EditBinds implements OnInit, AfterViewInit {
             descVal.key = 'label:';
             descVal.value = partDesc.part;
             this.usedBindDstDesc.push(descVal);
-            /*descVal = {} as gIF.descVal_t;
-            descVal.key = 'url:';
-            descVal.value = partDesc.url;
-            this.usedBindDstDesc.push(descVal);*/
         }
     }
 
@@ -288,10 +263,7 @@ export class EditBinds implements OnInit, AfterViewInit {
      */
     public freeBindDstChanged(event: MatSelectionListChange){
 
-        console.log('free bind dst selected: ' + JSON.stringify(event.option.value));
-
         this.selFreeBindDst = event.option.value;
-
         this.setFreeBindDstDesc(this.selFreeBindDst);
     }
 
@@ -308,7 +280,7 @@ export class EditBinds implements OnInit, AfterViewInit {
         if(partDesc){
             let descVal = {} as gIF.descVal_t;
             descVal.key = 'S/N:';
-            descVal.value = this.extToHex(target.extAddr);
+            descVal.value = this.utils.extToHex(target.extAddr);
             this.freeBindDstDesc.push(descVal);
             descVal = {} as gIF.descVal_t;
             descVal.key = 'node-name:';
@@ -318,10 +290,6 @@ export class EditBinds implements OnInit, AfterViewInit {
             descVal.key = 'label:';
             descVal.value = partDesc.part;
             this.freeBindDstDesc.push(descVal);
-            /*descVal = {} as gIF.descVal_t;
-            descVal.key = 'url:';
-            descVal.value = partDesc.url;
-            this.freeBindDstDesc.push(descVal);*/
         }
     }
 
@@ -333,21 +301,21 @@ export class EditBinds implements OnInit, AfterViewInit {
      */
     public addBindDst(){
 
-        console.log('add bind destination: ' +  JSON.stringify(this.selFreeBindDst));
         let numValid: number = 0;
-        this.usedBindDst.forEach((bindDst)=>{
+        for(const bindDst of this.usedBindDst) {
             if(bindDst.valid){
                 numValid++;
             }
-        });
+        }
         if(numValid < gConst.MAX_DST_BINDS){
             if(this.selFreeBindDst){
                 let bindDst = {} as gIF.bindDst_t;
                 bindDst.dstExtAddr = this.selFreeBindDst.extAddr;
                 bindDst.dstEP = this.selFreeBindDst.endPoint;
                 this.bindSrc.bindsDst.push(bindDst);
-
-                this.setBinds(this.bindSrc);
+                this.ngZone.run(()=>{
+                    this.setBinds(this.bindSrc);
+                });
 
                 this.deSelAll();
             }
@@ -362,41 +330,26 @@ export class EditBinds implements OnInit, AfterViewInit {
      */
     public removeBindDst(){
 
-        console.log('remove bind dst: ' + JSON.stringify(this.selUsedBindDst));
         if(this.selUsedBindDst) {
             let idx = this.bindSrc.bindsDst.findIndex((bindDst) => {
-                return (this.selUsedBindDst.extAddr == bindDst.dstExtAddr &&
-                        this.selUsedBindDst.endPoint == bindDst.dstEP);
+                if(this.selUsedBindDst.extAddr === bindDst.dstExtAddr) {
+                    if(this.selUsedBindDst.endPoint === bindDst.dstEP) {
+                        return true;
+                    }
+                }
+                return false;
             });
             if (idx > -1) {
                 this.bindSrc.bindsDst.splice(idx, 1);
             }
-            this.setBinds(this.bindSrc);
+            this.ngZone.run(()=>{
+                this.setBinds(this.bindSrc);
+            });
 
             this.deSelAll();
         }
     }
 
-    /***********************************************************************************************
-     * fn          setFreeBindDstToolTip
-     *
-     * brief
-     *
-     *
-    public setBindToolTip(bind: gIF.bind_t){
-
-        let idx = this.serial.partDesc.findIndex((desc)=>{
-            return(desc.partNum == bind.partNum);
-        });
-        if(idx > -1){
-            bind.tooltip = '';
-            bind.tooltip += sprintf('S/N: %s \n', this.extToHex(bind.extAddr));
-            bind.tooltip += sprintf('node-name: %s \n', this.serial.partDesc[idx].devName);
-            bind.tooltip += sprintf('label: %s \n', this.serial.partDesc[idx].part);
-            bind.tooltip += sprintf('url: %s \n', this.serial.partDesc[idx].url);
-        }
-    }
-    */
     /***********************************************************************************************
      * fn          showTooltip
      *
@@ -406,12 +359,12 @@ export class EditBinds implements OnInit, AfterViewInit {
     showTooltip(tt: MatTooltip,
                 bind: gIF.bind_t){
         let ttMsg = '';
-        ttMsg += sprintf('S/N: %s \n', this.extToHex(bind.extAddr));
+        ttMsg += `S/N: ${this.utils.extToHex(bind.extAddr)} \n`;
         let partDesc: gIF.part_t = this.dlgData.partMap.get(bind.partNum);
         if(partDesc){
-            ttMsg += sprintf('node-name: %s \n', partDesc.devName);
-            ttMsg += sprintf('part: %s \n', partDesc.part);
-            ttMsg += sprintf('url: %s \n', partDesc.url);
+            ttMsg += `node-name: ${partDesc.devName} \n`;
+            ttMsg += `part: ${partDesc.part} \n`;
+            ttMsg += `url: ${partDesc.url} \n`;
         }
         tt.message = ttMsg;
         tt.showDelay = 500;
@@ -448,6 +401,7 @@ export class EditBinds implements OnInit, AfterViewInit {
      *
      */
     private deSelAll() {
+
         this.selUsedBindDst = null;
         this.usedBindDstListSelected = [];
         this.usedBindDstDesc = [];
@@ -455,24 +409,6 @@ export class EditBinds implements OnInit, AfterViewInit {
         this.selFreeBindDst = null;
         this.freeBindDstListSelected = [];
         this.freeBindDstDesc = [];
-    }
-
-    /***********************************************************************************************
-     * fn          extToHex
-     *
-     * brief
-     *
-     */
-    private extToHex(extAddr: number) {
-
-        let ab = new ArrayBuffer(8);
-        let dv = new DataView(ab);
-        dv.setFloat64(0, extAddr);
-        let extHex = [];
-        for(let i = 0; i < 8; i++){
-            extHex[i] = ('0' + dv.getUint8(i).toString(16)).slice(-2);
-        }
-        return extHex.join(':');
     }
 
     /***********************************************************************************************

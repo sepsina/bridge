@@ -303,38 +303,38 @@ export class SetStyles implements OnInit, AfterViewInit {
         }
     }
 
-    colorChange(){
-        this.testView.nativeElement.style.color = this.formGroup.get('color').value;
+    colorChange(event){
+        this.testView.nativeElement.style.color = event.target.value;
     }
-    bgColorChange(){
-        this.testView.nativeElement.style.backgroundColor = this.formGroup.get('bgColor').value;
+    bgColorChange(event){
+        this.testView.nativeElement.style.backgroundColor = event.target.value;
     }
-    fontSizeChange(){
-        this.testView.nativeElement.style.fontSize = `${this.formGroup.get('fontSize').value}px`;
+    fontSizeChange(event){
+        this.testView.nativeElement.style.fontSize = `${event.target.value}px`;
     }
-    borderColorChange(){
-        this.testView.nativeElement.style.borderColor = this.formGroup.get('borderColor').value;
+    borderColorChange(event){
+        this.testView.nativeElement.style.borderColor = event.target.value;
     }
-    borderWidthChange(){
-        this.testView.nativeElement.style.borderWidth = `${this.formGroup.get('borderWidth').value}px`;
+    borderWidthChange(event){
+        this.testView.nativeElement.style.borderWidth = `${event.target.value}px`;
     }
-    borderStyleChange(){
-        this.testView.nativeElement.style.borderStyle = this.formGroup.get('borderStyle').value;
+    borderStyleChange(event){
+        this.testView.nativeElement.style.borderStyle = event.target.value;
     }
-    borderRadiusChange(){
-        this.testView.nativeElement.style.borderRadius = `${this.formGroup.get('borderRadius').value}px`;
+    borderRadiusChange(event){
+        this.testView.nativeElement.style.borderRadius = `${event.target.value}px`;
     }
-    paddingTopChange(){
-        this.testView.nativeElement.style.paddingTop = `${this.formGroup.get('paddingTop').value}px`;
+    paddingTopChange(event){
+        this.testView.nativeElement.style.paddingTop = `${event.target.value}px`;
     }
-    paddingRightChange(){
-        this.testView.nativeElement.style.paddingRight = `${this.formGroup.get('paddingRight').value}px`;
+    paddingRightChange(event){
+        this.testView.nativeElement.style.paddingRight = `${event.target.value}px`;
     }
-    paddingBottomChange(){
-        this.testView.nativeElement.style.paddingBottom = `${this.formGroup.get('paddingBottom').value}px`;
+    paddingBottomChange(event){
+        this.testView.nativeElement.style.paddingBottom = `${event.target.value}px`;
     }
-    paddingLeftChange(){
-        this.testView.nativeElement.style.paddingLeft = `${this.formGroup.get('paddingLeft').value}px`;
+    paddingLeftChange(event){
+        this.testView.nativeElement.style.paddingLeft = `${event.target.value}px`;
     }
 
     /***********************************************************************************************
