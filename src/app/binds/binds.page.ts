@@ -1,9 +1,9 @@
-import { Component, Inject, OnInit, ElementRef, NgZone, ViewChild } from '@angular/core';
+import { Component, Inject, NgZone, ViewChild, AfterViewInit } from '@angular/core';
 import { SerialLinkService } from '../services/serial-link.service';
 import { StorageService } from '../services/storage.service';
 import { UtilsService } from '../services/utils.service';
 import { Validators, FormControl } from '@angular/forms';
-import { MatSelectionListChange } from '@angular/material/list';
+import { MatSelectionList, MatSelectionListChange } from '@angular/material/list';
 import { MatSelectChange } from '@angular/material/select';
 import { MatTooltip } from '@angular/material/tooltip';
 import { MAT_DIALOG_DATA, MatDialogRef } from "@angular/material/dialog";
@@ -16,9 +16,10 @@ import * as gIF from '../gIF'
     templateUrl: './binds.page.html',
     styleUrls: ['./binds.page.scss'],
 })
-export class EditBinds implements OnInit {
+export class EditBinds implements AfterViewInit {
 
-    @ViewChild('free_binds') free_binds: ElementRef;
+    @ViewChild('free_binds') free_binds: MatSelectionList;
+    @ViewChild('used_binds') used_binds: MatSelectionList;
 
     allBindSrc: gIF.hostedBinds_t[] = [];
     bindSrc: gIF.hostedBinds_t;
@@ -29,12 +30,7 @@ export class EditBinds implements OnInit {
     selUsedBindDst: gIF.bind_t = null;
     selFreeBindDst: gIF.bind_t = null;
 
-    usedBindDstListSelected: gIF.bind_t[] = [];
-    freeBindDstListSelected: gIF.bind_t[] = [];
-
     bindSourceDesc: gIF.descVal_t[] = [];
-    usedBindDstDesc: gIF.descVal_t[] = [];
-    freeBindDstDesc: gIF.descVal_t[] = [];
 
     emptyFlag = true;
     noSrcBinds = true;
@@ -51,13 +47,15 @@ export class EditBinds implements OnInit {
     }
 
     /***********************************************************************************************
-     * fn          ngOnInit
+     * fn          ngAfterViewInit
      *
      * brief
      *
      */
-    ngOnInit(){
-        this.refresh();
+     ngAfterViewInit(){
+        setTimeout(() => {
+            this.refresh();
+        }, 0);
     }
 
     /***********************************************************************************************
@@ -186,6 +184,7 @@ export class EditBinds implements OnInit {
         this.setBindSourceDesc(this.bindSrc);
 
         this.deSelAll();
+
         this.ngZone.run(()=>{
             this.setBinds(this.bindSrc);
         });
@@ -224,35 +223,7 @@ export class EditBinds implements OnInit {
      *
      */
     public usedBindDstChanged(event: MatSelectionListChange){
-
         this.selUsedBindDst = event.option.value;
-        this.setUsedBindDstDesc(this.selUsedBindDst);
-    }
-
-    /***********************************************************************************************
-     * fn          setUsedBindDstDesc
-     *
-     * brief
-     *
-     */
-    public setUsedBindDstDesc(dst: gIF.bind_t){
-
-        this.usedBindDstDesc = [];
-        let partDesc: gIF.part_t = this.dlgData.partMap.get(dst.partNum);
-        if(partDesc){
-            let descVal = {} as gIF.descVal_t;
-            descVal.key = 'S/N:';
-            descVal.value = this.utils.extToHex(dst.extAddr);
-            this.usedBindDstDesc.push(descVal);
-            descVal = {} as gIF.descVal_t;
-            descVal.key = 'node-name:';
-            descVal.value = partDesc.devName;
-            this.usedBindDstDesc.push(descVal);
-            descVal = {} as gIF.descVal_t;
-            descVal.key = 'label:';
-            descVal.value = partDesc.part;
-            this.usedBindDstDesc.push(descVal);
-        }
     }
 
     /***********************************************************************************************
@@ -262,35 +233,7 @@ export class EditBinds implements OnInit {
      *
      */
     public freeBindDstChanged(event: MatSelectionListChange){
-
         this.selFreeBindDst = event.option.value;
-        this.setFreeBindDstDesc(this.selFreeBindDst);
-    }
-
-    /***********************************************************************************************
-     * fn          setFreeBindDstDesc
-     *
-     * brief
-     *
-     */
-    public setFreeBindDstDesc(target: gIF.bind_t){
-
-        this.freeBindDstDesc = [];
-        let partDesc: gIF.part_t = this.dlgData.partMap.get(target.partNum);
-        if(partDesc){
-            let descVal = {} as gIF.descVal_t;
-            descVal.key = 'S/N:';
-            descVal.value = this.utils.extToHex(target.extAddr);
-            this.freeBindDstDesc.push(descVal);
-            descVal = {} as gIF.descVal_t;
-            descVal.key = 'node-name:';
-            descVal.value = partDesc.devName;
-            this.freeBindDstDesc.push(descVal);
-            descVal = {} as gIF.descVal_t;
-            descVal.key = 'label:';
-            descVal.value = partDesc.part;
-            this.freeBindDstDesc.push(descVal);
-        }
     }
 
     /***********************************************************************************************
@@ -316,7 +259,6 @@ export class EditBinds implements OnInit {
                 this.ngZone.run(()=>{
                     this.setBinds(this.bindSrc);
                 });
-
                 this.deSelAll();
             }
         }
@@ -345,7 +287,6 @@ export class EditBinds implements OnInit {
             this.ngZone.run(()=>{
                 this.setBinds(this.bindSrc);
             });
-
             this.deSelAll();
         }
     }
@@ -403,12 +344,10 @@ export class EditBinds implements OnInit {
     private deSelAll() {
 
         this.selUsedBindDst = null;
-        this.usedBindDstListSelected = [];
-        this.usedBindDstDesc = [];
+        this.used_binds.deselectAll();
 
         this.selFreeBindDst = null;
-        this.freeBindDstListSelected = [];
-        this.freeBindDstDesc = [];
+        this.free_binds.deselectAll();
     }
 
     /***********************************************************************************************

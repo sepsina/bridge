@@ -11,29 +11,26 @@
     <div class="cards-common" id="edit-card">
         <mat-form-field>
             <input matInput
-                   autocomplete="off"
                    type="text"
+                   autocomplete="off"
                    placeholder="user"
                    [formControl]="userFormCtrl">
-            <!--<mat-hint align="end">user</mat-hint>-->
             <mat-error *ngIf="userFormCtrl.hasError('required')">{{userErr()}}</mat-error>
         </mat-form-field>
         <mat-form-field>
             <input matInput
-                   autocomplete="off"
                    type="text"
+                   autocomplete="off"
                    placeholder="password"
                    [formControl]="pswFormCtrl">
-            <!--<mat-hint align="end">freeDNS password</mat-hint>-->
             <mat-error *ngIf="pswFormCtrl.hasError('required')">{{pswErr()}}</mat-error>
         </mat-form-field>
         <mat-form-field>
             <input matInput
-                   autocomplete="off"
                    type="text"
+                   autocomplete="off"
                    placeholder="domain"
                    [formControl]="domainFormCtrl">
-            <!--<mat-hint align="end">freeDNS domain</mat-hint>-->
             <mat-error *ngIf="domainFormCtrl.hasError('required')">{{domainErr()}}</mat-error>
         </mat-form-field>
     </div>
@@ -57,9 +54,15 @@
 
 <div class="edit-dns">
     <div>
-        <button mat-stroked-button (click)="close()">Cancel</button>
+        <button mat-stroked-button
+                (click)="close()">
+            Cancel
+        </button>
     </div>
     <div>
-        <button mat-stroked-button (click)="save()">Save</button>
+        <button mat-stroked-button
+                (click)="save()">
+            Save
+        </button>
     </div>
 </div>
