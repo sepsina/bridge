@@ -21,14 +21,14 @@ export class EditScrolls implements OnInit, AfterViewInit {
     maxPos = 100;
     maxDuration = 2000;
 
-    scrollFormCtrl = new FormControl('', Validators.required);
+    scrollFormCtrl: FormControl;
+    nameFormCtrl: FormControl;
+    yPosFormCtrl: FormControl;
+    durationFormCtrl: FormControl;
 
     scrolls: gIF.scroll_t[] = [];
     newIdx: number = 0;
 
-    nameFormCtrl = new FormControl('', Validators.required);
-    yPosFormCtrl = new FormControl(0, [Validators.required, Validators.max(this.maxPos)]);
-    durationFormCtrl = new FormControl(0, [Validators.required, Validators.max(this.maxDuration)]);
 
     constructor(public dialogRef: MatDialogRef<EditScrolls>,
                 @Inject(MAT_DIALOG_DATA) public dlgData: any,
@@ -44,6 +44,7 @@ export class EditScrolls implements OnInit, AfterViewInit {
      *
      */
     ngOnInit(): void {
+
         for(let i = 0; i < this.dlgData.scrolls.length; i++){
             let scroll = {} as gIF.scroll_t;
             scroll.name = this.dlgData.scrolls[i].name;
@@ -51,6 +52,32 @@ export class EditScrolls implements OnInit, AfterViewInit {
             scroll.duration = this.dlgData.scrolls[i].duration;
             this.scrolls.push(scroll);
         }
+        this.scrollFormCtrl = new FormControl(
+            '',
+            [
+                Validators.required
+            ]
+        );
+        this.nameFormCtrl = new FormControl(
+            '',
+            [
+                Validators.required
+            ]
+        );
+        this.yPosFormCtrl = new FormControl(
+            0,
+            [
+                Validators.required,
+                Validators.max(this.maxPos)
+            ]
+        );
+        this.durationFormCtrl = new FormControl(
+            0,
+            [
+                Validators.required,
+                Validators.max(this.maxDuration)
+            ]
+        );
     }
     /***********************************************************************************************
      * @fn          ngAfterViewInit
@@ -59,6 +86,7 @@ export class EditScrolls implements OnInit, AfterViewInit {
      *
      */
     ngAfterViewInit(): void {
+
         setTimeout(() => {
             const scroll = this.scrolls[0];
             if(scroll) {
@@ -136,6 +164,7 @@ export class EditScrolls implements OnInit, AfterViewInit {
      *
      */
     nameChange(event) {
+
         let name = event.target.value;
         const scroll = this.scrollFormCtrl.value;
         if(name){
@@ -153,7 +182,6 @@ export class EditScrolls implements OnInit, AfterViewInit {
     yPosChange(event) {
 
         let pos = event.target.value;
-
         this.yPosSet(pos);
     }
 
@@ -169,7 +197,6 @@ export class EditScrolls implements OnInit, AfterViewInit {
             pos = 0;
             this.yPosFormCtrl.setValue(0);
         }
-
         if(pos > this.maxPos){
             return;
         }
@@ -192,7 +219,6 @@ export class EditScrolls implements OnInit, AfterViewInit {
         if(duration < 0){
             duration = 0;
         }
-
         if(duration > this.maxDuration){
             return;
         }
@@ -208,6 +234,7 @@ export class EditScrolls implements OnInit, AfterViewInit {
      *
      */
     addScroll(){
+
         let scroll = {} as gIF.scroll_t;
         scroll.name = sprintf('new_%d', this.newIdx++);
         scroll.yPos = 0;
@@ -223,6 +250,7 @@ export class EditScrolls implements OnInit, AfterViewInit {
      *
      */
     delScroll(){
+
         const scroll = this.scrollFormCtrl.value;
         let selIdx = this.scrolls.findIndex(item => item === scroll);
         if(selIdx > -1){
@@ -260,6 +288,7 @@ export class EditScrolls implements OnInit, AfterViewInit {
      *
      */
     isInvalid(){
+
         if(this.nameFormCtrl.invalid){
             return true;
         }

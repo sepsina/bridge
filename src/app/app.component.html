@@ -11,16 +11,18 @@
         <button id="edit-scrolls-button"
                 mat-button
                 onclick="this.blur()"
-                (click)="onEditScrollsClick(scrollable)">
+                (click)="onEditScrollsClick(scrollRef)">
             <mat-icon>edit</mat-icon>
             edit
         </button>
     </div>
 
-    <perfect-scrollbar id="scrollbar" #scrollable>
+    <perfect-scrollbar id="scrollbar" #scrollRef>
         <div class="container" #containerRef id="containerID">
             <div *ngFor="let attr of storage.attrMap | keyvalue;"
                  class="attr"
+                 ngDraggable
+                 [handle]="dragHandle"
                  [bounds]="containerRef"
                  [inBounds]="true"
                  (endOffset)="attr.value.drag=false; onDragEnded($event, attr)"
@@ -31,8 +33,6 @@
                  [zIndex]="1000"
                  [zIndexMoving]="99999"
                  [preventDefaultEvent]="true"
-                 [handle]="dragHandle"
-                 ngDraggable
                  (mouseenter)="attr.value.isSel=true"
                  (mouseleave)="attr.value.isSel=false"
                  (mousedown)="attr.value.isSel=false">

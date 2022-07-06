@@ -35,8 +35,9 @@ import {debounceTime} from 'rxjs/operators';
     styleUrls: ['app.component.scss'],
 })
 export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
+
     @ViewChild('containerRef') containerRef: ElementRef;
-    @ViewChild(PerfectScrollbarComponent) componentRef?: PerfectScrollbarComponent;
+    @ViewChild('scrollRef') scrollRef?: PerfectScrollbarComponent;
 
     resizeObservable$: Observable<Event>;
     resizeSubscription$: Subscription;
@@ -62,16 +63,14 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     partDesc: gIF.partDesc_t[] = [];
     partMap = new Map();
 
-    constructor(
-        private events: EventsService,
-        private serialLink: SerialLinkService,
-        private udp: UdpService,
-        private http: HttpService,
-        public storage: StorageService,
-        private matDialog: MatDialog,
-        private ngZone: NgZone,
-        private utils: UtilsService
-    ) {
+    constructor(private events: EventsService,
+                private serialLink: SerialLinkService,
+                private udp: UdpService,
+                private http: HttpService,
+                public storage: StorageService,
+                private matDialog: MatDialog,
+                private ngZone: NgZone,
+                private utils: UtilsService) {
         // ---
     }
 
@@ -92,17 +91,15 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
      *
      */
     ngOnInit() {
-        window.onbeforeunload = async () => {
+        window.onbeforeunload = async ()=>{
             this.udp.closeSocket();
             this.serialLink.closeComPort();
         };
 
         this.resizeObservable$ = fromEvent(window, 'resize');
-        this.resizeSubscription$ = this.resizeObservable$
-            .pipe(debounceTime(500))
-            .subscribe((evt) => {
-                this.scaleImgConteiner();
-            });
+        this.resizeSubscription$ = this.resizeObservable$.pipe(debounceTime(500)).subscribe((evt)=>{
+            this.scaleImgConteiner();
+        });
 
         this.init();
     }
@@ -130,13 +127,14 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
                 .readFileSync('./src/assets/floor_plan.jpg', 'base64');
             this.imgUrl = `data:image/jpeg;base64,${base64}`;
             this.setBkgImg(this.imgUrl);
-        } catch (err) {
+        }
+        catch (err) {
             console.log('read dir err: ' + err.code);
         }
         try {
             let parts = window.nw.require('fs').readFileSync('./src/assets/parts.json', 'utf8');
             this.partDesc = JSON.parse(parts);
-            for (let desc of this.partDesc) {
+            for(let desc of this.partDesc) {
                 let part = {} as gIF.part_t;
                 part.devName = desc.devName;
                 part.part = desc.part;
@@ -144,7 +142,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
                 this.partMap.set(desc.partNum, part);
             }
             //console.log(JSON.stringify(this.partDesc));
-        } catch (err) {
+        }
+        catch (err) {
             console.log('read parts err: ' + JSON.stringify(err));
         }
         //this.scrolls = [];
@@ -159,16 +158,12 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
      *
      */
     onScroll(idx) {
-        const pos = {
-            top: this.scrolls[idx].yPos,
-            duration: this.scrolls[idx].duration,
-        };
 
-        this.componentRef.directiveRef.scrollTo(
-            0,
-            (this.scrolls[idx].yPos * this.imgDim.height) / 100,
-            this.scrolls[idx].duration
-        );
+        const x = 0;
+        const y = (this.scrolls[idx].yPos * this.imgDim.height) / 100;
+        const speed = this.scrolls[idx].duration;
+
+        this.scrollRef.directiveRef.scrollTo(x, y, speed);
     }
 
     /***********************************************************************************************
@@ -192,7 +187,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
             'padding-bottom.px': attrStyle.paddingBottom,
             'padding-left.px': attrStyle.paddingLeft,
         };
-        if (attr.value.isValid == false) {
+        if(attr.value.isValid == false) {
             retStyle.color = 'gray';
             retStyle['background-color'] = 'transparent';
             retStyle['border-color'] = 'gray';
@@ -209,6 +204,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
      *
      */
     getAttrPosition(attr: any) {
+
         let attrPos = attr.value.pos;
 
         return {
@@ -226,7 +222,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     setBkgImg(imgSrc: string) {
         let bkgImg = new Image();
         bkgImg.src = imgSrc;
-        bkgImg.onload = () => {
+        bkgImg.onload = ()=>{
             this.bkgImgWidth = bkgImg.width;
             this.bkgImgHeight = bkgImg.height;
             const el = this.containerRef.nativeElement;
@@ -248,6 +244,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
      *
      */
     scaleImgConteiner() {
+
         const el = this.containerRef.nativeElement;
         let divDim = el.getBoundingClientRect();
 
@@ -265,6 +262,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
      *
      */
     async onDragEnded(event: any, keyVal: any) {
+
         let pos: gIF.nsPos_t = {
             x: event.x / this.imgDim.width,
             y: event.y / this.imgDim.height,
@@ -281,7 +279,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
      *
      */
     async setStyles(keyVal: any) {
-        setTimeout(() => {
+
+        setTimeout(()=>{
             const dialogConfig = new MatDialogConfig();
             dialogConfig.data = keyVal;
             dialogConfig.width = '350px';
@@ -290,7 +289,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
             dialogConfig.panelClass = 'set-styles-container';
 
             const dlgRef = this.matDialog.open(SetStyles, dialogConfig);
-            dlgRef.afterOpened().subscribe(() => {
+            dlgRef.afterOpened().subscribe(()=>{
                 // ---
             });
         }, 10);
@@ -303,10 +302,12 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
      *
      */
     async onEditScrollsClick(scrollRef) {
-        setTimeout(() => {
+
+        setTimeout(()=>{
             const dlgData = {
                 scrolls: JSON.parse(JSON.stringify(this.scrolls)),
-                scrollRef: this.componentRef.directiveRef,
+                //scrollRef: this.componentRef.directiveRef,
+                scrollRef: scrollRef.directiveRef,
                 imgDim: this.imgDim,
             };
             const dialogConfig = new MatDialogConfig();
@@ -318,7 +319,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
             const dlgRef = this.matDialog.open(EditScrolls, dialogConfig);
 
-            dlgRef.afterOpened().subscribe(() => {
+            dlgRef.afterOpened().subscribe(()=>{
                 // ---
             });
             dlgRef.afterClosed().subscribe((data) => {
@@ -337,7 +338,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
      *
      */
     async setDNS() {
-        setTimeout(() => {
+
+        setTimeout(()=>{
             const dialogConfig = new MatDialogConfig();
             dialogConfig.data = '';
             dialogConfig.width = '350px';
@@ -346,7 +348,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
             dialogConfig.panelClass = 'set-dns-container';
 
             const dlgRef = this.matDialog.open(EditFreeDNS, dialogConfig);
-            dlgRef.afterOpened().subscribe(() => {
+            dlgRef.afterOpened().subscribe(()=>{
                 // ---
             });
         }, 10);
@@ -358,7 +360,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
      *
      */
     async editBinds() {
-        setTimeout(() => {
+
+        setTimeout(()=>{
             const dlgData = {
                 partMap: this.partMap,
             };
@@ -371,7 +374,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
             const dlgRef = this.matDialog.open(EditBinds, dialogConfig);
 
-            dlgRef.afterOpened().subscribe(() => {
+            dlgRef.afterOpened().subscribe(()=>{
                 // ---
             });
         }, 10);
@@ -384,11 +387,12 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
      *
      */
     showTooltip(tt: MatTooltip, attr: gIF.hostedAttr_t) {
+
         let ttMsg = '';
         ttMsg += `attr-name: ${attr.name} \n`;
         ttMsg += `S/N: ${this.utils.extToHex(attr.extAddr)} \n`;
         let partDesc: gIF.part_t = this.partMap.get(attr.partNum);
-        if (partDesc) {
+        if(partDesc) {
             ttMsg += `node-name: ${partDesc.devName} \n`;
             ttMsg += `part: ${partDesc.part} \n`;
             ttMsg += `url: ${partDesc.url} \n`;

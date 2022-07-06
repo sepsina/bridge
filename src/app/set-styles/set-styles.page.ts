@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, OnInit, Inject, ViewChild, ElementRef, AfterViewInit, OnDestroy } from '@angular/core';
 import { SerialLinkService } from '../services/serial-link.service';
 import { StorageService } from '../services/storage.service';
 import { Validators, FormGroup, FormControl } from '@angular/forms';
@@ -7,26 +7,28 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 
 import * as gConst from '../gConst';
 import * as gIF from '../gIF'
+import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'app-set-styles',
     templateUrl: './set-styles.page.html',
     styleUrls: ['./set-styles.page.scss'],
 })
-export class SetStyles implements OnInit, AfterViewInit {
+export class SetStyles implements OnInit, AfterViewInit, OnDestroy {
 
     @ViewChild('testView') testView: ElementRef;
 
     //selAttr: gIF.hostedAttr_t;
-    maxFontSize: number = 50;
-    maxBorderWidth: number = 10;
-    maxBorderRadius: number = 20;
-    maxPaddingTop: number = 20;
-    maxPaddingRight: number = 20;
-    maxPaddingBottom: number = 20;
-    maxPaddingLeft: number = 20;
+    minFontSize = 5
+    maxFontSize = 50;
+    maxBorderWidth = 10;
+    maxBorderRadius = 20;
+    maxPaddingTop = 20;
+    maxPaddingRight = 20;
+    maxPaddingBottom = 20;
+    maxPaddingLeft = 20;
 
-    formGroup: FormGroup;
+    //formGroup: FormGroup;
     name: string;
     style = {} as gIF.ngStyle_t;
     valCorr = {} as gIF.valCorr_t;
@@ -36,6 +38,23 @@ export class SetStyles implements OnInit, AfterViewInit {
     unitSel = [];
     unitsCtrl = new FormControl('', Validators.required);
 
+    nameFormCtrl: FormControl;
+    offsetFormCtrl: FormControl;
+    colorFormCtrl: FormControl;
+    bgColorFormCtrl: FormControl;
+    fontSizeFormCtrl: FormControl;
+    borderColorFormCtrl: FormControl;
+    borderWidthFormCtrl: FormControl;
+    borderStyleFormCtrl: FormControl;
+    borderRadiusFormCtrl: FormControl;
+    paddingTopFormCtrl: FormControl;
+    paddingRightFormCtrl: FormControl;
+    paddingBottomFormCtrl: FormControl;
+    paddingLeftFormCtrl: FormControl;
+
+    subscription = new Subscription();
+
+
     constructor(public dialogRef: MatDialogRef<SetStyles>,
                 @Inject(MAT_DIALOG_DATA) public keyVal: any,
                 public events: EventsService,
@@ -44,7 +63,12 @@ export class SetStyles implements OnInit, AfterViewInit {
         this.selAttr = this.keyVal.value;
     }
 
+    ngOnDestroy(): void {
+        this.subscription.unsubscribe();
+    }
+
     ngAfterViewInit(): void {
+
         this.testView.nativeElement.style.color = this.selAttr.style.color;
         this.testView.nativeElement.style.backgroundColor = this.selAttr.style.bgColor;
         this.testView.nativeElement.style.fontSize = `${this.selAttr.style.fontSize}px`;
@@ -77,6 +101,190 @@ export class SetStyles implements OnInit, AfterViewInit {
         this.style.paddingBottom = this.selAttr.style.paddingBottom;
         this.style.paddingLeft = this.selAttr.style.paddingLeft;
 
+        this.nameFormCtrl = new FormControl(
+            this.name, [Validators.required]
+        );
+        this.offsetFormCtrl = new FormControl(
+            this.valCorr.offset, [Validators.required]
+        );
+
+        // color
+        this.colorFormCtrl = new FormControl(
+            this.style.color, [
+                Validators.required
+            ]
+        );
+        const colorSubscription = this.colorFormCtrl.valueChanges.subscribe((color)=>{
+            this.testView.nativeElement.style.color = color;
+        });
+        this.subscription.add(colorSubscription);
+
+        // background color
+        this.bgColorFormCtrl = new FormControl(
+            this.style.bgColor, [
+                Validators.required
+            ]
+        );
+        const bgColorSubscription = this.bgColorFormCtrl.valueChanges.subscribe((color)=>{
+            this.testView.nativeElement.style.backgroundColor = color;
+        });
+        this.subscription.add(bgColorSubscription);
+
+        // font size
+        this.fontSizeFormCtrl = new FormControl(
+            this.style.fontSize, [
+                Validators.required,
+                Validators.min(this.minFontSize),
+                Validators.max(this.maxFontSize)
+            ]
+        );
+        const fontSizeSubscription = this.fontSizeFormCtrl.valueChanges.subscribe((size)=>{
+            if(size > this.minFontSize){
+                if(size < this.maxFontSize){
+                    this.testView.nativeElement.style.fontSize = `${size}px`;
+                }
+            }
+        });
+        this.subscription.add(fontSizeSubscription);
+
+        // border color
+        this.borderColorFormCtrl = new FormControl(
+            this.style.borderColor, [
+                Validators.required
+            ]
+        );
+        const borderColorSubscription = this.borderColorFormCtrl.valueChanges.subscribe((color)=>{
+            this.testView.nativeElement.style.borderColor = color;
+        });
+        this.subscription.add(borderColorSubscription);
+
+        // border width
+        this.borderWidthFormCtrl = new FormControl(
+            this.style.borderWidth, [
+                Validators.required,
+                Validators.min(0),
+                Validators.max(this.maxBorderWidth)
+            ]
+        );
+        const borderWidthSubscription = this.borderWidthFormCtrl.valueChanges.subscribe((width)=>{
+            if(width > -1){
+                if(width <= this.maxBorderWidth){
+                    this.testView.nativeElement.style.borderWidth = `${width}px`;
+                }
+            }
+        });
+        this.subscription.add(borderWidthSubscription);
+
+        // border style
+        this.borderStyleFormCtrl = new FormControl(
+            this.style.borderStyle, [
+                Validators.required
+            ]
+        );
+        const borderStyleSubscription = this.borderStyleFormCtrl.valueChanges.subscribe((style)=>{
+            switch(style){
+                case 'none':
+                case 'hidden':
+                case 'dotted':
+                case 'dashed':
+                case 'solid':
+                case 'double':
+                case 'groove':
+                case 'ridge':
+                case 'inset':
+                case 'outset':
+                    this.testView.nativeElement.style.borderStyle = style;
+                    break;
+            }
+        });
+        this.subscription.add(borderStyleSubscription);
+
+        // border radius
+        this.borderRadiusFormCtrl = new FormControl(
+            this.style.borderRadius, [
+                Validators.required,
+                Validators.min(0),
+                Validators.max(this.maxBorderRadius)
+            ]
+        );
+        const borderRadiusSubscription = this.borderRadiusFormCtrl.valueChanges.subscribe((radius)=>{
+            if(radius > -1){
+                if(radius <= this.maxBorderRadius){
+                    this.testView.nativeElement.style.borderRadius = `${radius}px`;
+                }
+            }
+        });
+        this.subscription.add(borderRadiusSubscription);
+
+        // padding top
+        this.paddingTopFormCtrl = new FormControl(
+            this.style.paddingTop, [
+                Validators.required,
+                Validators.min(0),
+                Validators.max(this.maxPaddingTop)
+            ]
+        );
+        const paddingTopSubscription = this.paddingTopFormCtrl.valueChanges.subscribe((padding)=>{
+            if(padding > -1){
+                if(padding <= this.maxPaddingTop){
+                    this.testView.nativeElement.style.paddingTop = `${padding}px`;
+                }
+            }
+        });
+        this.subscription.add(paddingTopSubscription);
+
+        // padding right
+        this.paddingRightFormCtrl = new FormControl(
+            this.style.paddingRight, [
+                Validators.required,
+                Validators.min(0),
+                Validators.max(this.maxPaddingRight)
+            ]
+        );
+        const paddingRightSubscription = this.paddingRightFormCtrl.valueChanges.subscribe((padding)=>{
+            if(padding > -1){
+                if(padding <= this.maxPaddingRight){
+                    this.testView.nativeElement.style.paddingRight = `${padding}px`;
+                }
+            }
+        });
+        this.subscription.add(paddingRightSubscription);
+
+        // padding bottom
+        this.paddingBottomFormCtrl = new FormControl(
+            this.style.paddingBottom, [
+                Validators.required,
+                Validators.min(0),
+                Validators.max(this.maxPaddingBottom)
+            ]
+        );
+        const paddingBottomSubscription = this.paddingBottomFormCtrl.valueChanges.subscribe((padding)=>{
+            if(padding > -1){
+                if(padding <= this.maxPaddingBottom){
+                    this.testView.nativeElement.style.paddingBottom = `${padding}px`;
+                }
+            }
+        });
+        this.subscription.add(paddingBottomSubscription);
+
+        // padding left
+        this.paddingLeftFormCtrl = new FormControl(
+            this.style.paddingLeft, [
+                Validators.required,
+                Validators.min(0),
+                Validators.max(this.maxPaddingLeft)
+            ]
+        );
+        const paddingLeftSubscription = this.paddingLeftFormCtrl.valueChanges.subscribe((padding)=>{
+            if(padding > -1){
+                if(padding <= this.maxPaddingLeft){
+                    this.testView.nativeElement.style.paddingLeft = `${padding}px`;
+                }
+            }
+        });
+        this.subscription.add(paddingLeftSubscription);
+
+        /*
         this.formGroup = new FormGroup({
             name: new FormControl(
                 this.name,
@@ -164,6 +372,7 @@ export class SetStyles implements OnInit, AfterViewInit {
                 ]
             ),
         });
+        */
 
         switch(this.selAttr.clusterID){
             case gConst.CLUSTER_ID_MS_TEMPERATURE_MEASUREMENT: {
@@ -190,20 +399,20 @@ export class SetStyles implements OnInit, AfterViewInit {
     }
 
     async save() {
-        this.name = this.formGroup.get('name').value;
+        this.name = this.nameFormCtrl.value;
         this.valCorr.units = this.unitsCtrl.value.unit;
-        this.valCorr.offset = this.formGroup.get('offset').value;
-        this.style.color = this.formGroup.get('color').value;
-        this.style.bgColor = this.formGroup.get('bgColor').value;
-        this.style.fontSize = this.formGroup.get('fontSize').value;
-        this.style.borderColor = this.formGroup.get('borderColor').value;
-        this.style.borderWidth = this.formGroup.get('borderWidth').value;
-        this.style.borderStyle = this.formGroup.get('borderStyle').value;
-        this.style.borderRadius = this.formGroup.get('borderRadius').value;
-        this.style.paddingTop = this.formGroup.get('paddingTop').value;
-        this.style.paddingRight = this.formGroup.get('paddingRight').value;
-        this.style.paddingBottom = this.formGroup.get('paddingBottom').value;
-        this.style.paddingLeft = this.formGroup.get('paddingLeft').value;
+        this.valCorr.offset = this.offsetFormCtrl.value;
+        this.style.color = this.colorFormCtrl.value;
+        this.style.bgColor = this.bgColorFormCtrl.value;
+        this.style.fontSize = this.fontSizeFormCtrl.value;
+        this.style.borderColor = this.borderColorFormCtrl.value;
+        this.style.borderWidth = this.borderWidthFormCtrl.value;
+        this.style.borderStyle = this.borderStyleFormCtrl.value;
+        this.style.borderRadius = this.borderRadiusFormCtrl.value;
+        this.style.paddingTop = this.paddingTopFormCtrl.value;
+        this.style.paddingRight = this.paddingRightFormCtrl.value;
+        this.style.paddingBottom = this.paddingBottomFormCtrl.value;
+        this.style.paddingLeft = this.paddingLeftFormCtrl.value;
 
         await this.storage.setAttrNameAndStyle(this.name,
                                                this.style,
@@ -217,95 +426,117 @@ export class SetStyles implements OnInit, AfterViewInit {
     }
 
     nameErr() {
-        if(this.formGroup.get('name').hasError('required')){
+        if(this.nameFormCtrl.hasError('required')){
             return 'You must enter a value';
         }
     }
     offsetErr() {
-        if(this.formGroup.get('offset').hasError('required')){
+        if(this.offsetFormCtrl.hasError('required')){
             return 'You must enter a value';
         }
     }
     colorErr() {
-        if(this.formGroup.get('color').hasError('required')){
+        if(this.colorFormCtrl.hasError('required')){
             return 'You must enter a value';
         }
     }
     bgColorErr() {
-        if(this.formGroup.get('bgColor').hasError('required')){
+        if(this.bgColorFormCtrl.hasError('required')){
             return 'You must enter a value';
         }
     }
     fontSizeErr() {
-        if(this.formGroup.get('fontSize').hasError('required')){
+        if(this.fontSizeFormCtrl.hasError('required')){
             return 'You must enter a value';
         }
-        if(this.formGroup.get('fontSize').hasError('max')){
+        if(this.fontSizeFormCtrl.hasError('min')){
+            return `font size must be grater than ${this.minFontSize}`;
+        }
+        if(this.fontSizeFormCtrl.hasError('max')){
             return `font size must be less than ${this.maxFontSize}`;
         }
     }
     borderColorErr() {
-        if(this.formGroup.get('borderColor').hasError('required')){
+        if(this.borderColorFormCtrl.hasError('required')){
             return 'You must enter a value';
         }
     }
     borderWidthErr() {
-        if(this.formGroup.get('borderWidth').hasError('required')){
+        if(this.borderWidthFormCtrl.hasError('required')){
             return 'You must enter a value';
         }
-        if(this.formGroup.get('borderWidth').hasError('max')){
+        if(this.borderWidthFormCtrl.hasError('min')){
+            return `border width must be greater than 0`;
+        }
+        if(this.borderWidthFormCtrl.hasError('max')){
             return `border width must be less than ${this.maxBorderWidth}`;
         }
     }
     borderStyleErr() {
-        if(this.formGroup.get('borderStyle').hasError('required')){
+        if(this.borderStyleFormCtrl.hasError('required')){
             return 'You must enter a value';
         }
     }
     borderRadiusErr() {
-        if(this.formGroup.get('borderRadius').hasError('required')){
+        if(this.borderRadiusFormCtrl.hasError('required')){
             return 'You must enter a value';
         }
-        if(this.formGroup.get('borderRadius').hasError('max')){
+        if(this.borderRadiusFormCtrl.hasError('min')){
+            return `border radius must be greater than 0`;
+        }
+        if(this.borderRadiusFormCtrl.hasError('max')){
             return `border radius must be less than ${this.maxBorderRadius}`;
         }
     }
     paddingTopErr() {
-        if(this.formGroup.get('paddingTop').hasError('required')){
+        if(this.paddingTopFormCtrl.hasError('required')){
             return 'You must enter a value';
         }
-        if(this.formGroup.get('paddingTop').hasError('max')){
+        if(this.paddingTopFormCtrl.hasError('min')){
+            return `padding top must be greater than 0`;
+        }
+        if(this.paddingTopFormCtrl.hasError('max')){
             return `padding top must be less than ${this.maxPaddingTop}`;
         }
     }
     paddingRightErr() {
-        if(this.formGroup.get('paddingRight').hasError('required')){
+        if(this.paddingRightFormCtrl.hasError('required')){
             return 'You must enter a value';
         }
-        if(this.formGroup.get('paddingRight').hasError('max')){
+        if(this.paddingRightFormCtrl.hasError('min')){
+            return `padding right must be greater than 0`;
+        }
+        if(this.paddingRightFormCtrl.hasError('max')){
             return `padding right must be less than ${this.maxPaddingRight}`;
         }
     }
     paddingBottomErr() {
-        if(this.formGroup.get('paddingBottom').hasError('required')){
+        if(this.paddingBottomFormCtrl.hasError('required')){
             return 'You must enter a value';
         }
-        if(this.formGroup.get('paddingBottom').hasError('max')){
+        if(this.paddingBottomFormCtrl.hasError('min')){
+            return `padding bottom must be greater than 0`;
+        }
+        if(this.paddingBottomFormCtrl.hasError('max')){
             return `padding bottom must be less than ${this.maxPaddingBottom}`;
         }
     }
     paddingLeftErr() {
-        if(this.formGroup.get('paddingLeft').hasError('required')){
+        if(this.paddingLeftFormCtrl.hasError('required')){
             return 'You must enter a value';
         }
-        if(this.formGroup.get('paddingLeft').hasError('max')){
+        if(this.paddingLeftFormCtrl.hasError('min')){
+            return `padding left must be greater than 0`;
+        }
+        if(this.paddingLeftFormCtrl.hasError('max')){
             return `padding left must be less than ${this.maxPaddingLeft}`;
         }
     }
-
+    /*
     colorChange(event){
         this.testView.nativeElement.style.color = event.target.value;
     }
+
     bgColorChange(event){
         this.testView.nativeElement.style.backgroundColor = event.target.value;
     }
@@ -336,7 +567,7 @@ export class SetStyles implements OnInit, AfterViewInit {
     paddingLeftChange(event){
         this.testView.nativeElement.style.paddingLeft = `${event.target.value}px`;
     }
-
+    */
     /***********************************************************************************************
      * @fn          unitsChanged
      *
@@ -346,4 +577,54 @@ export class SetStyles implements OnInit, AfterViewInit {
     unitsChanged(event){
         //console.log(event);
     }
+
+    /***********************************************************************************************
+     * @fn          isValid
+     *
+     * @brief
+     *
+     */
+    isValid(){
+        if(this.nameFormCtrl.invalid){
+            return false;
+        }
+        if(this.offsetFormCtrl.invalid){
+            return false;
+        }
+        if(this.colorFormCtrl.invalid){
+            return false;
+        }
+        if(this.bgColorFormCtrl.invalid){
+            return false;
+        }
+        if(this.fontSizeFormCtrl.invalid){
+            return false;
+        }
+        if(this.borderColorFormCtrl.invalid){
+            return false;
+        }
+        if(this.borderWidthFormCtrl.invalid){
+            return false;
+        }
+        if(this.borderStyleFormCtrl.invalid){
+            return false;
+        }
+        if(this.borderRadiusFormCtrl.invalid){
+            return false;
+        }
+        if(this.paddingTopFormCtrl.invalid){
+            return false;
+        }
+        if(this.paddingRightFormCtrl.invalid){
+            return false;
+        }
+        if(this.paddingBottomFormCtrl.invalid){
+            return false;
+        }
+        if(this.paddingLeftFormCtrl.invalid){
+            return false;
+        }
+        return true;
+    }
+
 }

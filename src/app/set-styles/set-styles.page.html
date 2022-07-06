@@ -18,9 +18,9 @@
             <input matInput
                    type="text"
                    placeholder="attr name"
-                   [formControl]="formGroup.get('name')">
+                   [formControl]="nameFormCtrl">
             <mat-hint align="end">attribute name</mat-hint>
-            <mat-error *ngIf="formGroup.get('name').invalid">{{nameErr()}}</mat-error>
+            <mat-error *ngIf="nameFormCtrl.invalid">{{nameErr()}}</mat-error>
         </mat-form-field>
     </div>
     <div class="cards-common" id="offset-card" *ngIf="selAttr.isSensor">
@@ -38,9 +38,9 @@
             <input matInput
                    type="number"
                    placeholder="offset"
-                   [formControl]="formGroup.get('offset')">
+                   [formControl]="offsetFormCtrl">
             <mat-hint align="end">value correction</mat-hint>
-            <mat-error *ngIf="formGroup.get('offset').invalid">{{offsetErr()}}</mat-error>
+            <mat-error *ngIf="offsetFormCtrl.invalid">{{offsetErr()}}</mat-error>
         </mat-form-field>
     </div>
     <div class="cards-common" id="styles-card">
@@ -48,110 +48,106 @@
             <input matInput
                    type="text"
                    placeholder="color"
-                   [formControl]="formGroup.get('color')"
-                   (change)="colorChange($event)">
+                   [formControl]="colorFormCtrl">
             <mat-hint align="end">text color</mat-hint>
-            <mat-error *ngIf="formGroup.get('color').invalid">{{colorErr()}}</mat-error>
+            <mat-error *ngIf="colorFormCtrl.invalid">{{colorErr()}}</mat-error>
         </mat-form-field>
         <mat-form-field>
             <input matInput
                    type="text"
                    placeholder="background-color"
-                   [formControl]="formGroup.get('bgColor')"
-                   (change)="bgColorChange($event)">
+                   [formControl]="bgColorFormCtrl">
             <mat-hint align="end">background color</mat-hint>
-            <mat-error *ngIf="formGroup.get('bgColor').invalid">{{bgColorErr()}}</mat-error>
+            <mat-error *ngIf="bgColorFormCtrl.invalid">{{bgColorErr()}}</mat-error>
         </mat-form-field>
         <mat-form-field>
             <input matInput
                    type="number"
+                   [min]="minFontSize"
                    [max]="maxFontSize"
                    placeholder="font size"
-                   [formControl]="formGroup.get('fontSize')"
-                   (change)="fontSizeChange($event)">
+                   [formControl]="fontSizeFormCtrl">
             <mat-hint align="end">text size, max {{maxFontSize}}px</mat-hint>
-            <mat-error *ngIf="formGroup.get('fontSize').invalid">{{fontSizeErr()}}</mat-error>
+            <mat-error *ngIf="fontSizeFormCtrl.invalid">{{fontSizeErr()}}</mat-error>
         </mat-form-field>
         <div class="cards-common" id="borders-card">
             <mat-form-field>
                 <input matInput
                        type="text"
                        placeholder="border-color"
-                       [formControl]="formGroup.get('borderColor')"
-                       (change)="borderColorChange($event)">
+                       [formControl]="borderColorFormCtrl">
                 <mat-hint align="end">frame color</mat-hint>
-                <mat-error *ngIf="formGroup.get('borderColor').invalid">{{borderColorErr()}}</mat-error>
+                <mat-error *ngIf="borderColorFormCtrl.invalid">{{borderColorErr()}}</mat-error>
             </mat-form-field>
             <mat-form-field>
                 <input matInput
                        type="number"
+                       min=0
                        [max]="maxBorderWidth"
                        placeholder="border-width"
-                       [formControl]="formGroup.get('borderWidth')"
-                       (change)="borderWidthChange($event)">
+                       [formControl]="borderWidthFormCtrl">
                 <mat-hint align="end">frame line width, max {{maxBorderWidth}}px</mat-hint>
-                <mat-error *ngIf="formGroup.get('borderWidth').invalid">{{borderWidthErr()}}</mat-error>
+                <mat-error *ngIf="borderWidthFormCtrl.invalid">{{borderWidthErr()}}</mat-error>
             </mat-form-field>
             <mat-form-field>
                 <input matInput
                        type="text"
                        placeholder="border-style"
-                       [formControl]="formGroup.get('borderStyle')"
-                       (change)="borderStyleChange($event)">
+                       [formControl]="borderStyleFormCtrl">
                 <mat-hint align="end">frame line style</mat-hint>
-                <mat-error *ngIf="formGroup.get('borderStyle').invalid">{{borderStyleErr()}}</mat-error>
+                <mat-error *ngIf="borderStyleFormCtrl.invalid">{{borderStyleErr()}}</mat-error>
             </mat-form-field>
             <mat-form-field>
                 <input matInput
                        type="number"
+                       min=0
                        [max]="maxBorderRadius"
                        placeholder="border-radius"
-                       [formControl]="formGroup.get('borderRadius')"
-                       (change)="borderRadiusChange($event)">
+                       [formControl]="borderRadiusFormCtrl">
                 <mat-hint align="end">rounded corners radius, max {{maxBorderRadius}}px</mat-hint>
-                <mat-error *ngIf="formGroup.get('borderRadius').invalid">{{borderRadiusErr()}}</mat-error>
+                <mat-error *ngIf="borderRadiusFormCtrl.invalid">{{borderRadiusErr()}}</mat-error>
             </mat-form-field>
         </div>
         <div class="cards-common" id="paddings-card">
             <mat-form-field>
                 <input matInput
                        type="number"
+                       min=0
                        [max]="maxPaddingTop"
                        placeholder="padding-top"
-                       [formControl]="formGroup.get('paddingTop')"
-                       (change)="paddingTopChange($event)">
+                       [formControl]="paddingTopFormCtrl">
                 <mat-hint align="end">top padding, max {{maxPaddingTop}}px</mat-hint>
-                <mat-error *ngIf="formGroup.get('paddingTop').invalid">{{paddingTopErr()}}</mat-error>
+                <mat-error *ngIf="paddingTopFormCtrl.invalid">{{paddingTopErr()}}</mat-error>
             </mat-form-field>
             <mat-form-field>
                 <input matInput
                        type="number"
+                       min=0
                        [max]="maxPaddingRight"
                        placeholder="padding-right"
-                       [formControl]="formGroup.get('paddingRight')"
-                       (change)="paddingRightChange($event)">
+                       [formControl]="paddingRightFormCtrl">
                 <mat-hint align="end">right padding, max {{maxPaddingRight}}px</mat-hint>
-                <mat-error *ngIf="formGroup.get('paddingRight').invalid">{{paddingRightErr()}}</mat-error>
+                <mat-error *ngIf="paddingRightFormCtrl.invalid">{{paddingRightErr()}}</mat-error>
             </mat-form-field>
             <mat-form-field>
                 <input matInput
                        type="number"
+                       min=0
                        [max]="maxPaddingBottom"
                        placeholder="padding-bottom"
-                       [formControl]="formGroup.get('paddingBottom')"
-                       (change)="paddingBottomChange($event)" >
+                       [formControl]="paddingBottomFormCtrl">
                 <mat-hint align="end">bottom padding, max {{maxPaddingBottom}}px</mat-hint>
-                <mat-error *ngIf="formGroup.get('paddingBottom').invalid">{{paddingBottomErr()}}</mat-error>
+                <mat-error *ngIf="paddingBottomFormCtrl.invalid">{{paddingBottomErr()}}</mat-error>
             </mat-form-field>
             <mat-form-field>
                 <input matInput
                        type="number"
+                       min=0
                        [max]="maxPaddingLeft"
                        placeholder="padding-left"
-                       [formControl]="formGroup.get('paddingLeft')"
-                       (change)="paddingLeftChange($event)">
+                       [formControl]="paddingLeftFormCtrl">
                 <mat-hint align="end">left padding, max {{maxPaddingLeft}}px</mat-hint>
-                <mat-error *ngIf="formGroup.get('paddingLeft').invalid">{{paddingLeftErr()}}</mat-error>
+                <mat-error *ngIf="paddingLeftFormCtrl.invalid">{{paddingLeftErr()}}</mat-error>
             </mat-form-field>
         </div>
     </div>
@@ -161,7 +157,7 @@
         <button mat-stroked-button (click)="close()">Close</button>
     </div>
     <div>
-        <button mat-stroked-button (click)="save()" [disabled]="!formGroup.valid">Save</button>
+        <button mat-stroked-button (click)="save()" [disabled]="!isValid()">Save</button>
     </div>
 </div>
 
