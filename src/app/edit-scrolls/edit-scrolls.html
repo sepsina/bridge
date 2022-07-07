@@ -10,8 +10,7 @@
 <div id="dlg-frame">
     <mat-form-field id="scroll-sel">
         <mat-label>scroll</mat-label>
-        <mat-select [formControl]="scrollFormCtrl"
-                    (selectionChange)="selChanged($event)">
+        <mat-select [formControl]="scrollFormCtrl">
             <mat-option *ngFor="let scroll of scrolls"
                         [value]="scroll">
                 {{scroll.name}}
@@ -26,35 +25,30 @@
                    type="text"
                    autocomplete="off"
                    placeholder="name"
-                   [formControl]="nameFormCtrl"
-                   [value]="scrollFormCtrl.value.name"
-                   (change)="nameChange($event)">
+                   [formControl]="nameFormCtrl">
             <mat-hint align="end">scroll name</mat-hint>
             <mat-error *ngIf="nameFormCtrl.invalid">{{nameErr()}}</mat-error>
         </mat-form-field>
         <mat-form-field>
             <input matInput
                    type="number"
-                   [min]="minPos"
-                   [max]=" maxPos"
+                   autocomplete="off"
+                   [min]=0
+                   [max]="maxPos"
                    placeholder="y-position"
-                   [formControl]="yPosFormCtrl"
-                   [value]="scrollFormCtrl.value.yPos"
-                   (change)="yPosChange($event)">
+                   [formControl]="yPosFormCtrl">
             <mat-hint align="end">max {{maxPos}}%</mat-hint>
             <mat-error align="end" *ngIf="yPosFormCtrl.invalid">{{posErr()}}</mat-error>
         </mat-form-field>
         <mat-form-field>
             <input matInput
                    type="number"
-                   min = 0
-                   [max]="maxDuration"
-                   placeholder="duration"
-                   [formControl]="durationFormCtrl"
-                   [value]="scrollFormCtrl.value.duration"
-                   (change)="durationChange($event)">
-            <mat-hint align="end">scroll duration, max {{maxDuration}}mS</mat-hint>
-            <mat-error align="end" *ngIf="durationFormCtrl.invalid">{{durationErr()}}</mat-error>
+                   min=0
+                   [max]="maxSpeed"
+                   placeholder="speed"
+                   [formControl]="speedFormCtrl">
+            <mat-hint align="end">scroll speed, max {{maxSpeed}}mS</mat-hint>
+            <mat-error align="end" *ngIf="speedFormCtrl.invalid">{{speedErr()}}</mat-error>
         </mat-form-field>
     </div>
 
@@ -64,7 +58,7 @@
             del
         </button>
 
-        <button mat-button (click)="addScroll()" [disabled]="isInvalid()">
+        <button mat-button (click)="addScroll()">
             <mat-icon>playlist_add</mat-icon>
             add
         </button>

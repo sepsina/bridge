@@ -1,10 +1,9 @@
-import {Component, Inject, OnInit, AfterViewInit} from '@angular/core';
+import { Component, Inject, OnInit, AfterViewInit } from '@angular/core';
 import { StorageService } from '../services/storage.service';
 import { EventsService } from '../services/events.service';
 import { Validators, FormControl } from '@angular/forms';
-import { sprintf } from "sprintf-js";
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import {HttpClient, HttpHeaders} from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 import * as gConst from '../gConst';
 import * as gIF from '../gIF'
@@ -87,6 +86,7 @@ export class EditFreeDNS implements OnInit, AfterViewInit {
      *
      */
     save() {
+
         this.dns.user = this.userFormCtrl.value;
         this.dns.psw = this.pswFormCtrl.value;
         this.dns.domain = this.domainFormCtrl.value;

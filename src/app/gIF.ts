@@ -191,7 +191,7 @@ export  interface part_t {
 export interface scroll_t {
     name: string;
     yPos: number;
-    duration: number
+    speed: number
 }
 
 export interface udpZclReq_t {
