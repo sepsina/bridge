@@ -40,16 +40,6 @@
             <mat-hint align="end">max {{maxPos}}%</mat-hint>
             <mat-error align="end" *ngIf="yPosFormCtrl.invalid">{{posErr()}}</mat-error>
         </mat-form-field>
-        <mat-form-field>
-            <input matInput
-                   type="number"
-                   min=0
-                   [max]="maxSpeed"
-                   placeholder="speed"
-                   [formControl]="speedFormCtrl">
-            <mat-hint align="end">scroll speed, max {{maxSpeed}}mS</mat-hint>
-            <mat-error align="end" *ngIf="speedFormCtrl.invalid">{{speedErr()}}</mat-error>
-        </mat-form-field>
     </div>
 
     <div id="buttons-card">

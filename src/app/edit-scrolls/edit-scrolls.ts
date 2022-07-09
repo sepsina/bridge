@@ -15,12 +15,10 @@ export class EditScrolls implements OnInit, AfterViewInit, OnDestroy {
 
     minPos = 0;
     maxPos = 100;
-    maxSpeed = 2000;
 
     scrollFormCtrl: FormControl;
     nameFormCtrl: FormControl;
     yPosFormCtrl: FormControl;
-    speedFormCtrl: FormControl;
     subscription = new Subscription;
 
     scrolls: gIF.scroll_t[] = [];
@@ -51,7 +49,6 @@ export class EditScrolls implements OnInit, AfterViewInit, OnDestroy {
             let scroll = {} as gIF.scroll_t;
             scroll.name = this.dlgData.scrolls[i].name;
             scroll.yPos = this.dlgData.scrolls[i].yPos;
-            scroll.speed = this.dlgData.scrolls[i].speed;
             this.scrolls.push(scroll);
         }
         this.scrollFormCtrl = new FormControl(
@@ -64,7 +61,6 @@ export class EditScrolls implements OnInit, AfterViewInit, OnDestroy {
             if(scroll){
                 this.nameFormCtrl.setValue(scroll.name);
                 this.yPosFormCtrl.setValue(scroll.yPos);
-                this.speedFormCtrl.setValue(scroll.speed);
                 this.yPosSet(scroll.yPos);
             }
         });
@@ -103,19 +99,6 @@ export class EditScrolls implements OnInit, AfterViewInit, OnDestroy {
         });
         this.subscription.add(yPosSubscription);
 
-        this.speedFormCtrl = new FormControl(
-            0,
-            [
-                Validators.required,
-                Validators.min(0),
-                Validators.max(this.maxSpeed)
-            ]
-        );
-        const speedSubscription = this.speedFormCtrl.valueChanges.subscribe((speed)=>{
-            this.speedFormCtrl.markAsTouched();
-            (<gIF.scroll_t>this.scrollFormCtrl.value).speed = speed;
-        });
-        this.subscription.add(yPosSubscription);
     }
     /***********************************************************************************************
      * @fn          ngAfterViewInit
@@ -132,7 +115,6 @@ export class EditScrolls implements OnInit, AfterViewInit, OnDestroy {
                     this.scrollFormCtrl.setValue(scroll);
                     this.nameFormCtrl.setValue(scroll.name);
                     this.yPosFormCtrl.setValue(scroll.yPos);
-                    this.speedFormCtrl.setValue(scroll.speed);
                     this.yPosSet(scroll.yPos);
                 });
             }
@@ -150,16 +132,10 @@ export class EditScrolls implements OnInit, AfterViewInit, OnDestroy {
 
         for(const scroll of this.scrolls){
             if(scroll.name){
-                if(scroll.yPos) {
+                if(scroll.yPos !== null) {
                     if(scroll.yPos >= 0){
                         if(scroll.yPos <= this.maxPos){
-                            if(scroll.speed){
-                                if(scroll.speed >= 0){
-                                    if(scroll.speed <= this.maxSpeed){
-                                        validScrolls.push(scroll);
-                                    }
-                                }
-                            }
+                            validScrolls.push(scroll);
                         }
                     }
                 }
@@ -204,23 +180,7 @@ export class EditScrolls implements OnInit, AfterViewInit, OnDestroy {
             return `position must be <= ${this.maxPos} %`;
         }
     }
-    /***********************************************************************************************
-     * @fn          speedErr
-     *
-     * @brief
-     *
-     */
-    speedErr() {
-        if(this.speedFormCtrl.hasError('required')){
-            return 'You must enter a value';
-        }
-        if(this.speedFormCtrl.hasError('min')){
-            return 'speed must be >= 0';
-        }
-        if(this.speedFormCtrl.hasError('max')){
-            return `speed must be <= ${this.maxSpeed}`;
-        }
-    }
+
     /***********************************************************************************************
      * @fn          nameChange
      *
@@ -259,38 +219,23 @@ export class EditScrolls implements OnInit, AfterViewInit, OnDestroy {
 
         if(pos < 0){
             pos = 0;
-            //this.yPosFormCtrl.setValue(0);
         }
         if(pos > this.maxPos){
             return;
         }
-        this.dlgData.scrollRef.scrollTo(0, pos * this.dlgData.imgDim.height / 100, 100);
+
+        this.dlgData.scrollRef.scrollTo({
+            top: pos * this.dlgData.imgDim.height / 100,
+            left: 0,
+            behavior: 'smooth'
+        });
+
         const scroll = this.scrollFormCtrl.value;
         if(scroll){
             scroll.yPos = pos;
         }
     }
-    /***********************************************************************************************
-     * @fn          speedChange
-     *
-     * @brief
-     *
-     */
-    speedChange(event) {
 
-        let speed = event.target.value;
-
-        if(speed < 0){
-            speed = 0;
-        }
-        if(speed > this.maxSpeed){
-            return;
-        }
-        const scroll = this.scrollFormCtrl.value;
-        if(scroll){
-            scroll.speed = speed;
-        }
-    }
     /***********************************************************************************************
      * @fn          addScroll
      *
@@ -303,7 +248,6 @@ export class EditScrolls implements OnInit, AfterViewInit, OnDestroy {
         scroll.name = `new_${this.newIdx++}`;
         this.newIdx++;
         scroll.yPos = 0;
-        scroll.speed = 200;
 
         this.scrolls.push(scroll);
         this.scrollFormCtrl.setValue(scroll);
@@ -345,26 +289,5 @@ export class EditScrolls implements OnInit, AfterViewInit, OnDestroy {
         console.log(event);
         this.yPosSet(event.value.yPos);
     }
-
-    /***********************************************************************************************
-     * @fn          isInvalid
-     *
-     * @brief
-     *
-     *
-    isInvalid(){
-
-        if(this.nameFormCtrl.invalid){
-            return true;
-        }
-        if(this.yPosFormCtrl.invalid){
-            return true;
-        }
-        if(this.speedFormCtrl.invalid){
-            return true;
-        }
-        return false;
-    }
-    */
 
 }

@@ -13,21 +13,12 @@ import { EditScrolls } from './edit-scrolls/edit-scrolls';
 import { EditFreeDNS } from './edit-freeDNS/edit-freeDNS';
 import { EditBinds } from './binds/binds.page';
 
-import { PerfectScrollbarComponent } from 'ngx-perfect-scrollbar';
-
 import * as gConst from './gConst';
 import * as gIF from './gIF';
 
 import { fromEvent, Observable, Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { CdkDragEnd, CdkDragStart } from '@angular/cdk/drag-drop';
-import { CDK_DRAG_CONFIG } from '@angular/cdk/drag-drop';
-
-const DragConfig = {
-    dragStartThreshold: 0,
-    pointerDirectionChangeThreshold: 5,
-    zIndex: 10000
-};
 
 @Component({
     selector: 'app-root',
@@ -37,7 +28,7 @@ const DragConfig = {
 export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
     @ViewChild('containerRef') containerRef: ElementRef;
-    @ViewChild('scrollRef') scrollRef?: PerfectScrollbarComponent;
+    @ViewChild('floorPlanRef') floorPlanRef: ElementRef;
 
     resizeObservable$: Observable<Event>;
     resizeSubscription$: Subscription;
@@ -83,7 +74,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
      *
      */
     ngAfterViewInit() {
-        // ---
+        this.init();
     }
 
     /***********************************************************************************************
@@ -102,8 +93,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         this.resizeSubscription$ = this.resizeObservable$.pipe(debounceTime(500)).subscribe((evt)=>{
             this.scaleImgConteiner();
         });
-
-        this.init();
     }
 
     /***********************************************************************************************
@@ -163,7 +152,11 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         const y = (this.scrolls[idx].yPos * this.imgDim.height) / 100;
         const speed = this.scrolls[idx].speed;
 
-        this.scrollRef.directiveRef.scrollTo(x, y, speed);
+        this.floorPlanRef.nativeElement.scrollTo({
+            top: y,
+            left: x,
+            behavior: 'smooth'
+        });
     }
 
     /***********************************************************************************************
@@ -229,6 +222,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
             this.bkgImgWidth = bkgImg.width;
             this.bkgImgHeight = bkgImg.height;
             const el = this.containerRef.nativeElement;
+            //const el = document.getElementById('containerID');
             let divDim = el.getBoundingClientRect();
             this.imgDim.width = divDim.width;
             this.imgDim.height = Math.round((divDim.width / bkgImg.width) * bkgImg.height);
@@ -320,13 +314,12 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
      * @brief
      *
      */
-    async onEditScrollsClick(scrollRef) {
+    async onEditScrollsClick() {
 
         setTimeout(()=>{
             const dlgData = {
                 scrolls: JSON.parse(JSON.stringify(this.scrolls)),
-                //scrollRef: this.componentRef.directiveRef,
-                scrollRef: scrollRef.directiveRef,
+                scrollRef: this.floorPlanRef.nativeElement,
                 imgDim: this.imgDim,
             };
             const dialogConfig = new MatDialogConfig();

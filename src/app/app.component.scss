@@ -42,30 +42,25 @@
 }
 
 #edit-scrolls-button {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  border: 1px solid lightgray;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid lightgray;
 }
 
-#scrollbar{
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: stretch;
-
-  flex: 1 1 100%;
-  border: 1px solid lightgray;
-  border-radius: 6px;
-  margin: 0px;
-  position: relative;
-  overflow: auto;
+#floor-plan{
+    flex: 1 1 100%;
+    border: 2px solid rgb(3, 111, 253);
+    border-radius: 6px;
+    margin: 0px;
+    position: relative;
+    overflow: auto;
 }
 
-.container{
-  position: relative;
-  border: solid 3px red;
+#containerID{
+    position: relative;
+    border: solid 2px red;
 }
 
 .attr{
