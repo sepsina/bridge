@@ -14,18 +14,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { HttpClientModule } from '@angular/common/http';
-
 import { AngularMaterialModule } from './angular-material/angular-material.module';
-import { AngularDraggableModule } from "angular2-draggable";
-//import { NgScrollbarModule } from 'ngx-scrollbar';
-import { PerfectScrollbarModule } from 'ngx-perfect-scrollbar';
-import { PERFECT_SCROLLBAR_CONFIG } from 'ngx-perfect-scrollbar';
-import { PerfectScrollbarConfigInterface } from 'ngx-perfect-scrollbar';
-
-const DEFAULT_PERFECT_SCROLLBAR_CONFIG: PerfectScrollbarConfigInterface = {
-    suppressScrollX: true
-};
-
 
 @NgModule({
     declarations: [
@@ -44,14 +33,9 @@ const DEFAULT_PERFECT_SCROLLBAR_CONFIG: PerfectScrollbarConfigInterface = {
         AppRoutingModule,
         BrowserAnimationsModule,
         HttpClientModule,
-        AngularMaterialModule,
-        AngularDraggableModule,
-        //NgScrollbarModule
-        PerfectScrollbarModule
+        AngularMaterialModule
     ],
-    providers: [
-        { provide: PERFECT_SCROLLBAR_CONFIG, useValue: DEFAULT_PERFECT_SCROLLBAR_CONFIG}
-    ],
+    providers: [],
     bootstrap: [AppComponent],
     entryComponents:[]
 })

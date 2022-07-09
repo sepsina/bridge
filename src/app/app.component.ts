@@ -41,13 +41,11 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     scrolls: gIF.scroll_t[] = [
         {
             name: 'floor-1',
-            yPos: 10,
-            speed: 200,
+            yPos: 10
         },
         {
             name: 'floor-2',
-            yPos: 50,
-            speed: 800,
+            yPos: 50
         },
     ];
 
@@ -150,7 +148,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
         const x = 0;
         const y = (this.scrolls[idx].yPos * this.imgDim.height) / 100;
-        const speed = this.scrolls[idx].speed;
 
         this.floorPlanRef.nativeElement.scrollTo({
             top: y,
