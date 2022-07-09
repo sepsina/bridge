@@ -10,7 +10,6 @@
         </div>
         <button id="edit-scrolls-button"
                 mat-button
-                onclick="this.blur()"
                 (click)="onEditScrollsClick()">
             <mat-icon>edit</mat-icon>
             edit
@@ -20,30 +19,30 @@
     <div id="floor-plan" #floorPlanRef>
         <div #containerRef id="containerID">
             <div *ngFor="let attr of storage.attrMap | keyvalue;"
-                    class="attr"
-                    cdkDrag
-                    [cdkDragBoundary]="containerRef"
-                    (cdkDragEnded)="attr.value.drag=false; onDragEnded($event, attr)"
-                    (cdkDragStarted)="attr.value.drag=true; onDragStarted($event)"
-                    [cdkDragFreeDragPosition]="getAttrPosition(attr)"
-                    (mouseenter)="attr.value.isSel=true"
-                    (mouseleave)="attr.value.isSel=false"
-                    (mousedown)="attr.value.isSel=false">
+                 class="attr"
+                 cdkDrag
+                 [cdkDragBoundary]="containerRef"
+                 (cdkDragEnded)="attr.value.drag=false; onDragEnded($event, attr)"
+                 (cdkDragStarted)="attr.value.drag=true; onDragStarted($event)"
+                 [cdkDragFreeDragPosition]="getAttrPosition(attr)"
+                 (mouseenter)="attr.value.isSel=true"
+                 (mouseleave)="attr.value.isSel=false"
+                 (mousedown)="attr.value.isSel=false">
                 <div cdkDragHandle
-                        class="attr-val centered"
-                        highlightSel
-                        [ngStyle]="getAttrStyle(attr)"
-                        matTooltip
-                        [matTooltipDisabled]="dragFlag"
-                        #attrToolTip='matTooltip'
-                        (mouseenter)="showTooltip(attrToolTip, attr.value)"
-                        (mouseleave)="attrToolTip.hide()"
-                        (mousedown)="attrToolTip.hide()">
+                     class="attr-val centered"
+                     highlightSel
+                     [ngStyle]="getAttrStyle(attr)"
+                     matTooltip
+                     [matTooltipDisabled]="dragFlag"
+                     #attrToolTip='matTooltip'
+                     (mouseenter)="showTooltip(attrToolTip, attr.value)"
+                     (mouseleave)="attrToolTip.hide()"
+                     (mousedown)="attrToolTip.hide()">
                     {{attr.value.formatedVal}}
                 </div>
                 <div *ngIf="attr.value.isSel && !dragFlag"
-                        class="attr-edit centered"
-                        (mousedown)="setStyles(attr)">
+                     class="attr-edit centered"
+                     (mousedown)="setStyles(attr)">
                     <mat-icon>settings</mat-icon>
                 </div>
             </div>
@@ -53,14 +52,12 @@
     <div class="footer">
         <button id="edit-dns-button"
                 mat-button
-                onclick="this.blur()"
                 (click)="setDNS()">
             <mat-icon>edit</mat-icon>
             free DNS
         </button>
         <button id="edit-binds-button"
                 mat-button
-                onclick="this.blur()"
                 (click)="editBinds()">
             <mat-icon>edit</mat-icon>
             binds

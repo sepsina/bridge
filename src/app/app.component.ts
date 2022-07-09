@@ -219,7 +219,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
             this.bkgImgWidth = bkgImg.width;
             this.bkgImgHeight = bkgImg.height;
             const el = this.containerRef.nativeElement;
-            //const el = document.getElementById('containerID');
             let divDim = el.getBoundingClientRect();
             this.imgDim.width = divDim.width;
             this.imgDim.height = Math.round((divDim.width / bkgImg.width) * bkgImg.height);
@@ -297,6 +296,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
             dialogConfig.autoFocus = false;
             dialogConfig.disableClose = true;
             dialogConfig.panelClass = 'set-styles-container';
+            dialogConfig.restoreFocus = false;
 
             const dlgRef = this.matDialog.open(SetStyles, dialogConfig);
             dlgRef.afterOpened().subscribe(()=>{
@@ -325,6 +325,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
             dialogConfig.autoFocus = false;
             dialogConfig.disableClose = true;
             dialogConfig.panelClass = 'edit-scrolls-container';
+            dialogConfig.restoreFocus = false;
 
             const dlgRef = this.matDialog.open(EditScrolls, dialogConfig);
 
@@ -355,6 +356,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
             dialogConfig.autoFocus = false;
             dialogConfig.disableClose = true;
             dialogConfig.panelClass = 'set-dns-container';
+            dialogConfig.restoreFocus = false;
 
             const dlgRef = this.matDialog.open(EditFreeDNS, dialogConfig);
             dlgRef.afterOpened().subscribe(()=>{
@@ -380,6 +382,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
             dialogConfig.autoFocus = false;
             dialogConfig.disableClose = true;
             dialogConfig.panelClass = 'edit-binds-container';
+            dialogConfig.restoreFocus = false;
 
             const dlgRef = this.matDialog.open(EditBinds, dialogConfig);
 
