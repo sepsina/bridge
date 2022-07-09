@@ -1,38 +1,38 @@
-import {
-    AfterViewInit,
-    Component,
-    ElementRef,
-    OnInit,
-    ViewChild,
-    NgZone,
-    OnDestroy,
-} from '@angular/core';
-import {EventsService} from './services/events.service';
-import {SerialLinkService} from './services/serial-link.service';
-import {UdpService} from './services/udp.service';
-import {HttpService} from './services/http.service';
-import {StorageService} from './services/storage.service';
-import {UtilsService} from './services/utils.service';
-import {MatDialog, MatDialogConfig} from '@angular/material/dialog';
-import {MatTooltip} from '@angular/material/tooltip';
+import { AfterViewInit, Component, ElementRef, OnInit, ViewChild, NgZone, OnDestroy, Inject } from '@angular/core';
+import { EventsService } from './services/events.service';
+import { SerialLinkService } from './services/serial-link.service';
+import { UdpService } from './services/udp.service';
+import { HttpService } from './services/http.service';
+import { StorageService } from './services/storage.service';
+import { UtilsService } from './services/utils.service';
+import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
+import { MatTooltip } from '@angular/material/tooltip';
 
-import {SetStyles} from './set-styles/set-styles.page';
-import {EditScrolls} from './edit-scrolls/edit-scrolls';
-import {EditFreeDNS} from './edit-freeDNS/edit-freeDNS';
-import {EditBinds} from './binds/binds.page';
+import { SetStyles } from './set-styles/set-styles.page';
+import { EditScrolls } from './edit-scrolls/edit-scrolls';
+import { EditFreeDNS } from './edit-freeDNS/edit-freeDNS';
+import { EditBinds } from './binds/binds.page';
 
-import {PerfectScrollbarComponent} from 'ngx-perfect-scrollbar';
+import { PerfectScrollbarComponent } from 'ngx-perfect-scrollbar';
 
 import * as gConst from './gConst';
 import * as gIF from './gIF';
 
-import {fromEvent, Observable, Subscription} from 'rxjs';
-import {debounceTime} from 'rxjs/operators';
+import { fromEvent, Observable, Subscription } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
+import { CdkDragEnd, CdkDragStart } from '@angular/cdk/drag-drop';
+import { CDK_DRAG_CONFIG } from '@angular/cdk/drag-drop';
+
+const DragConfig = {
+    dragStartThreshold: 0,
+    pointerDirectionChangeThreshold: 5,
+    zIndex: 10000
+};
 
 @Component({
     selector: 'app-root',
     templateUrl: 'app.component.html',
-    styleUrls: ['app.component.scss'],
+    styleUrls: ['app.component.scss']
 })
 export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
@@ -62,6 +62,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
     partDesc: gIF.partDesc_t[] = [];
     partMap = new Map();
+
+    dragFlag = false;
 
     constructor(private events: EventsService,
                 private serialLink: SerialLinkService,
@@ -122,9 +124,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
      */
     async init() {
         try {
-            let base64 = window.nw
-                .require('fs')
-                .readFileSync('./src/assets/floor_plan.jpg', 'base64');
+            let base64 = window.nw.require('fs').readFileSync('./src/assets/floor_plan.jpg', 'base64');
             this.imgUrl = `data:image/jpeg;base64,${base64}`;
             this.setBkgImg(this.imgUrl);
         }
@@ -205,6 +205,9 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
      */
     getAttrPosition(attr: any) {
 
+        if(attr.value.drag){
+            return undefined;
+        }
         let attrPos = attr.value.pos;
 
         return {
@@ -261,15 +264,31 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
      * @brief
      *
      */
-    async onDragEnded(event: any, keyVal: any) {
+    async onDragEnded(event: CdkDragEnd, keyVal: any) {
+
+        this.dragFlag = false;
+        event.source.element.nativeElement.style.zIndex = '1';
+
+        const evtPos = event.source.getFreeDragPosition();
 
         let pos: gIF.nsPos_t = {
-            x: event.x / this.imgDim.width,
-            y: event.y / this.imgDim.height,
+            x: evtPos.x / this.imgDim.width,
+            y: evtPos.y / this.imgDim.height,
         };
         keyVal.value.pos = pos;
 
         await this.storage.setAttrPos(pos, keyVal);
+    }
+
+    /***********************************************************************************************
+     * @fn          onDragEnded
+     *
+     * @brief
+     *
+     */
+    async onDragStarted(event: CdkDragStart) {
+        this.dragFlag = true;
+        event.source.element.nativeElement.style.zIndex = '10000';
     }
 
     /***********************************************************************************************

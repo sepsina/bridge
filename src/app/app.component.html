@@ -21,34 +21,28 @@
         <div class="container" #containerRef id="containerID">
             <div *ngFor="let attr of storage.attrMap | keyvalue;"
                  class="attr"
-                 ngDraggable
-                 [handle]="dragHandle"
-                 [bounds]="containerRef"
-                 [inBounds]="true"
-                 (endOffset)="attr.value.drag=false; onDragEnded($event, attr)"
-                 (started)="attr.value.drag=true"
-                 [trackPosition]="true"
-                 [position]="getAttrPosition(attr)"
-                 [gridSize]="5"
-                 [zIndex]="1000"
-                 [zIndexMoving]="99999"
-                 [preventDefaultEvent]="true"
+                 cdkDrag
+                 [cdkDragBoundary]="containerRef"
+                 (cdkDragEnded)="attr.value.drag=false; onDragEnded($event, attr)"
+                 (cdkDragStarted)="attr.value.drag=true; onDragStarted($event)"
+                 [cdkDragFreeDragPosition]="getAttrPosition(attr)"
                  (mouseenter)="attr.value.isSel=true"
                  (mouseleave)="attr.value.isSel=false"
                  (mousedown)="attr.value.isSel=false">
-                <div #dragHandle
+                <div cdkDragHandle
                      class="attr-val centered"
                      highlightSel
                      [ngStyle]="getAttrStyle(attr)"
                      matTooltip
+                     [matTooltipDisabled]="dragFlag"
                      #attrToolTip='matTooltip'
-                     (mouseenter)="showTooltip(attrToolTip, attr.value);"
-                     (mouseleave)="attrToolTip.hide();"
-                     (mousedown)="attrToolTip.hide();">
+                     (mouseenter)="showTooltip(attrToolTip, attr.value)"
+                     (mouseleave)="attrToolTip.hide()"
+                     (mousedown)="attrToolTip.hide()">
                     {{attr.value.formatedVal}}
                 </div>
-                <div class="attr-edit centered"
-                     *ngIf="attr.value.isSel && !attr.value.drag"
+                <div *ngIf="attr.value.isSel && !dragFlag"
+                     class="attr-edit centered"
                      (mousedown)="setStyles(attr)">
                     <mat-icon>settings</mat-icon>
                 </div>
