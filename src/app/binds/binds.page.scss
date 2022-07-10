@@ -17,8 +17,9 @@
   cursor: move;
   flex: 1 1 100%;
 }
-
+/*
 .binds-frame{
+    border: solid 2px rgb(2, 141, 25);
   width: 100%;
   max-height: 85vh;
   overflow: auto;
@@ -27,8 +28,9 @@
   justify-content: flex-start;
   align-items: stretch;
 }
+*/
 .bind-container {
-  flex: 1 1 100%;
+  //flex: 1 1 100%;
   //width: 100%;
   display: flex;
   flex-direction: row;
@@ -41,7 +43,7 @@
   flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
-  flex: 1 1 45%;
+  flex: 1 1 50%;
   padding: 5px;
   gap: 10px;
 }
@@ -106,25 +108,17 @@
   justify-content: center;
   align-items: stretch;
 }
-.used-binds-list {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: stretch;
-  border: solid 1px #ccc;
-  border-radius: 4px;
-  overflow: auto;
+#usedBindsList {
+    border: solid 1px #ccc;
+    min-height: 60px;
+    background: white;
+    border-radius: 4px;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
 }
-.free-binds-list {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: stretch;
-  border: solid 1px #ccc;
-  border-radius: 4px;
-  overflow: scroll;
-  flex: 1 1 100px;
-}
+
 .sel-dst-bind-desc {
   display: flex;
   flex-direction: column;
@@ -146,27 +140,13 @@
   align-items: stretch;
   flex: 1 1 auto;
 }
-.trans-ctrl_conteiner {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  justify-content: center;
-  flex: 1 1 10%;
-  padding: 5px;
-}
-.trans-ctrl-button {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: stretch;
-  margin: 0.5em;
-}
+
 .dst-binds-container {
   display: flex;
   flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
-  flex: 1 1 45%;
+  flex: 1 1 50%;
   padding: 5px;
   gap: 10px;
 }
@@ -179,43 +159,80 @@
   text-align: left;
   padding-left: 0.5em;
 }
-.close-dlg {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: stretch;
-  //margin-top: 0.5em;
-}
-.mat-list-option[aria-disabled="true"]{
-  background-color: azure;
-  color: lightgray;
-}
-.mat-list-base {
-  padding-top: 0;
+
+#freeBindsList {
+    border: solid 1px #ccc;
+    min-height: 60px;
+    max-height: 300px;
+    background: white;
+    border-radius: 4px;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
 }
 
-.footer {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: stretch;
-  position:fixed;
-  bottom:0;
-  background-color:white;
-  width:100%;
-  border: 1px solid lightgray;
-  min-height: 50px;
-  padding: 10px;
+.binds-list {
+    border: solid 1px #ccc;
+    min-height: 60px;
+    background: white;
+    border-radius: 4px;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+.bind-box {
+    padding: 10px 10px;
+    border-bottom: solid 1px #ccc;
+    color: rgba(0, 0, 0, 0.87);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    box-sizing: border-box;
+    cursor: move;
+    background: khaki;
+    font-size: 14px;
+    user-select: none;
+}
+.bind-box:hover {
+    background: rgb(217, 255, 1);
+}
+.bind-box.cdk-drag-disabled {
+    background: white;
+    color: darkgray;
+    cursor: default;
 }
 
-.binds-footer {
-  position: sticky;
-  bottom: 0;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
-  flex: 1 0 100%;
-  padding: 10px;
-  background: #e6e6e6;
+.cdk-drag-preview {
+    box-sizing: border-box;
+    border-radius: 4px;
+    box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2),
+                0 8px 10px 1px rgba(0, 0, 0, 0.14),
+                0 3px 14px 2px rgba(0, 0, 0, 0.12);
 }
+
+.cdk-drag-placeholder {
+    opacity: 0;
+}
+
+.cdk-drag-animating {
+    transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.bind-box:last-child {
+    border: none;
+}
+
+.binds-list.cdk-drop-list-dragging .bind-box:not(.cdk-drag-placeholder) {
+    transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+#freeBindsList.cdk-drop-list-dragging .bind-box:not(.cdk-drag-placeholder) {
+    transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+#usedBindsList.cdk-drop-list-dragging .bind-box:not(.cdk-drag-placeholder) {
+    transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+

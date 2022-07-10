@@ -1,15 +1,17 @@
-import { Component, Inject, NgZone, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, Inject, NgZone, AfterViewInit } from '@angular/core';
 import { SerialLinkService } from '../services/serial-link.service';
 import { StorageService } from '../services/storage.service';
 import { UtilsService } from '../services/utils.service';
 import { Validators, FormControl } from '@angular/forms';
-import { MatSelectionList, MatSelectionListChange } from '@angular/material/list';
 import { MatSelectChange } from '@angular/material/select';
 import { MatTooltip } from '@angular/material/tooltip';
 import { MAT_DIALOG_DATA, MatDialogRef } from "@angular/material/dialog";
 
 import * as gConst from '../gConst';
 import * as gIF from '../gIF'
+import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
+
+const EMPTY_NAME = '--- empty ---';
 
 @Component({
     selector: 'app-binds',
@@ -17,9 +19,6 @@ import * as gIF from '../gIF'
     styleUrls: ['./binds.page.scss'],
 })
 export class EditBinds implements AfterViewInit {
-
-    @ViewChild('free_binds') free_binds: MatSelectionList;
-    @ViewChild('used_binds') used_binds: MatSelectionList;
 
     allBindSrc: gIF.hostedBinds_t[] = [];
     bindSrc: gIF.hostedBinds_t;
@@ -96,7 +95,6 @@ export class EditBinds implements AfterViewInit {
             this.noSrcBinds = true;
             this.emptyFlag = true;
         }
-        this.deSelAll();
     }
 
     /***********************************************************************************************
@@ -155,7 +153,7 @@ export class EditBinds implements AfterViewInit {
         for(let i = 0; i < numEmpty; i++){
             let bind = {} as gIF.bind_t;
             bind.valid = false;
-            bind.name = '--- empty ---';
+            bind.name = EMPTY_NAME;
             this.usedBindDst.push(bind);
         }
         for(let i = 0; i < numUsed; i++){
@@ -167,7 +165,7 @@ export class EditBinds implements AfterViewInit {
         for(let i = this.freeBindDst.length; i < gConst.MAX_SRC_BINDS; i++){
             let bind = {} as gIF.bind_t;
             bind.valid = false;
-            bind.name = '--- empty ---';
+            bind.name = EMPTY_NAME;
             this.freeBindDst.push(bind);
         }
     }
@@ -182,8 +180,6 @@ export class EditBinds implements AfterViewInit {
 
         this.nameFormCtrl.setValue(this.bindSrc.name);
         this.setBindSourceDesc(this.bindSrc);
-
-        this.deSelAll();
 
         this.ngZone.run(()=>{
             this.setBinds(this.bindSrc);
@@ -213,81 +209,6 @@ export class EditBinds implements AfterViewInit {
             descVal.key = 'label:';
             descVal.value = partDesc.part;
             this.bindSourceDesc.push(descVal);
-        }
-    }
-
-    /***********************************************************************************************
-     * fn          usedBindDstChanged
-     *
-     * brief
-     *
-     */
-    public usedBindDstChanged(event: MatSelectionListChange){
-        this.selUsedBindDst = event.option.value;
-    }
-
-    /***********************************************************************************************
-     * fn          freeBindDstChanged
-     *
-     * brief
-     *
-     */
-    public freeBindDstChanged(event: MatSelectionListChange){
-        this.selFreeBindDst = event.option.value;
-    }
-
-    /***********************************************************************************************
-     * fn          addBindDst
-     *
-     * brief
-     *
-     */
-    public addBindDst(){
-
-        let numValid: number = 0;
-        for(const bindDst of this.usedBindDst) {
-            if(bindDst.valid){
-                numValid++;
-            }
-        }
-        if(numValid < gConst.MAX_DST_BINDS){
-            if(this.selFreeBindDst){
-                let bindDst = {} as gIF.bindDst_t;
-                bindDst.dstExtAddr = this.selFreeBindDst.extAddr;
-                bindDst.dstEP = this.selFreeBindDst.endPoint;
-                this.bindSrc.bindsDst.push(bindDst);
-                this.ngZone.run(()=>{
-                    this.setBinds(this.bindSrc);
-                });
-                this.deSelAll();
-            }
-        }
-    }
-
-    /***********************************************************************************************
-     * fn          removeBindDst
-     *
-     * brief
-     *
-     */
-    public removeBindDst(){
-
-        if(this.selUsedBindDst) {
-            let idx = this.bindSrc.bindsDst.findIndex((bindDst) => {
-                if(this.selUsedBindDst.extAddr === bindDst.dstExtAddr) {
-                    if(this.selUsedBindDst.endPoint === bindDst.dstEP) {
-                        return true;
-                    }
-                }
-                return false;
-            });
-            if (idx > -1) {
-                this.bindSrc.bindsDst.splice(idx, 1);
-            }
-            this.ngZone.run(()=>{
-                this.setBinds(this.bindSrc);
-            });
-            this.deSelAll();
         }
     }
 
@@ -336,21 +257,6 @@ export class EditBinds implements AfterViewInit {
     }
 
     /***********************************************************************************************
-     * fn          deSelAll
-     *
-     * brief
-     *
-     */
-    private deSelAll() {
-
-        this.selUsedBindDst = null;
-        this.used_binds.deselectAll();
-
-        this.selFreeBindDst = null;
-        this.free_binds.deselectAll();
-    }
-
-    /***********************************************************************************************
      * fn          close
      *
      * brief
@@ -370,4 +276,92 @@ export class EditBinds implements AfterViewInit {
         this.dialogRef.close();
     }
     */
+
+    /***********************************************************************************************
+     * fn          usedDrop
+     *
+     * brief
+     *
+     */
+    usedDrop(event: CdkDragDrop<any[]>) {
+        if(event.previousContainer !== event.container){
+            let i = this.usedBindDst.findIndex((used)=>{
+                if(used.name == EMPTY_NAME){
+                    return true;
+                }
+                return false;
+            });
+            const empty = {} as gIF.bind_t;
+            empty.valid = false;
+            empty.name = EMPTY_NAME;
+
+            if(i > -1){
+                const bind = this.freeBindDst.splice(event.previousIndex, 1, empty)[0];
+                this.usedBindDst.splice(event.currentIndex, 0, bind); // insert
+
+                let bindDst = {} as gIF.bindDst_t;
+                bindDst.dstExtAddr = bind.extAddr;
+                bindDst.dstEP = bind.endPoint;
+                this.bindSrc.bindsDst.push(bindDst);
+
+                if(i >= event.currentIndex){
+                    i++;
+                }
+                this.usedBindDst.splice(i, 1);
+            }
+        }
+        else {
+            moveItemInArray(event.container.data,
+                            event.previousIndex,
+                            event.currentIndex);
+        }
+    }
+
+    /***********************************************************************************************
+     * fn          freeDrop
+     *
+     * brief
+     *
+     */
+    freeDrop(event: CdkDragDrop<any[]>) {
+
+        if(event.previousContainer !== event.container){
+            let i = this.freeBindDst.findIndex((free)=>{
+                if(free.name == EMPTY_NAME){
+                    return true;
+                }
+                return false;
+            });
+            const empty = {} as gIF.bind_t;
+            empty.valid = false;
+            empty.name = EMPTY_NAME;
+
+            const bind = this.usedBindDst.splice(event.previousIndex, 1, empty)[0];
+            this.freeBindDst.splice(event.currentIndex, 0, bind); // insert
+
+            if(i > -1) {
+                if(i >= event.currentIndex){
+                    i++;
+                }
+                this.freeBindDst.splice(i, 1);
+            }
+
+            let j = this.bindSrc.bindsDst.findIndex((bindDst) => {
+                if(bind.extAddr === bindDst.dstExtAddr) {
+                    if(bind.endPoint === bindDst.dstEP) {
+                        return true;
+                    }
+                }
+                return false;
+            });
+            if (j > -1) {
+                this.bindSrc.bindsDst.splice(j, 1);
+            }
+        }
+        else {
+            moveItemInArray(event.container.data,
+                            event.previousIndex,
+                            event.currentIndex);
+        }
+    }
 }
