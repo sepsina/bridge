@@ -48,31 +48,34 @@
                 </button>
             </div>
         </div>
-        <div id="usedBindsList"
-                cdkDropList
-                #usedList="cdkDropList"
-                [cdkDropListConnectedTo]="[freeList]"
-                [cdkDropListData]="usedBindDst"
-                (cdkDropListDropped)="usedDrop($event)">
-            <div *ngFor="let bindDst of usedBindDst"
-                 class="bind-box"
-                 cdkDrag
-                 [cdkDragDisabled]='!bindDst.valid'
-                 matTooltip
-                 [matTooltipDisabled]="!bindDst.valid"
-                 matTooltipPosition="after"
-                 #usedDstTooltip="matTooltip"
-                 (mouseenter)="showTooltip(usedDstTooltip, bindDst)"
-                 (mouseleave)="usedDstTooltip.hide()"
-                 (mousedown)="usedDstTooltip.hide()">
-                {{bindDst.name}}
+        <div id="used-binds-wrap" #usedWrapRef>
+            <div class="binds-list"
+                 cdkDropList
+                 #usedList="cdkDropList"
+                 [cdkDropListConnectedTo]="[freeList]"
+                 [cdkDropListData]="usedBindDst"
+                 (cdkDropListDropped)="usedDrop($event)">
+                <div *ngFor="let bindDst of usedBindDst"
+                     class="bind-box"
+                     #bindBoxRef
+                     cdkDrag
+                     [cdkDragDisabled]='!bindDst.valid'
+                     matTooltip
+                     [matTooltipDisabled]="!bindDst.valid"
+                     matTooltipPosition="after"
+                     #usedDstTooltip="matTooltip"
+                     (mouseenter)="showTooltip(usedDstTooltip, bindDst)"
+                     (mouseleave)="usedDstTooltip.hide()"
+                     (mousedown)="usedDstTooltip.hide()">
+                    {{bindDst.name}}
+                </div>
+
             </div>
         </div>
         <div class="send-binds-conteiner">
             <button id="send_binds"
                     mat-stroked-button
-                    (click)="wrSrcBinds()"
-                    [disabled]="noSrcBinds">
+                    (click)="wrSrcBinds()">
                 Send
             </button>
         </div>
@@ -82,28 +85,27 @@
         <div class="dst-binds-header">
             Available Destinations
         </div>
-        <div id="freeBindsList"
-             cdkDropList
-             #freeList="cdkDropList"
-             [cdkDropListConnectedTo]="[usedList]"
-             [cdkDropListData]="freeBindDst"
-             (cdkDropListDropped)="freeDrop($event)">
-            <div *ngFor="let bindDst of freeBindDst"
-                 class="bind-box"
-                 cdkDrag
-                 [cdkDragDisabled]='!bindDst.valid'
-                 matTooltip
-                 [matTooltipDisabled]="!bindDst.valid"
-                 matTooltipPosition="before"
-                 #freeDstTooltip="matTooltip"
-                 (mouseenter)="showTooltip(freeDstTooltip, bindDst)"
-                 (mouseleave)="freeDstTooltip.hide()"
-                 (mousedown)="freeDstTooltip.hide()">
-                {{bindDst.name}}
+        <div class="free-binds-wrap">
+            <div class="binds-list"
+                cdkDropList
+                #freeList="cdkDropList"
+                [cdkDropListConnectedTo]="[usedList]"
+                [cdkDropListData]="freeBindDst"
+                (cdkDropListDropped)="freeDrop($event)">
+                <div *ngFor="let bindDst of freeBindDst"
+                    class="bind-box"
+                    cdkDrag
+                    [cdkDragDisabled]='!bindDst.valid'
+                    matTooltip
+                    [matTooltipDisabled]="!bindDst.valid"
+                    matTooltipPosition="before"
+                    #freeDstTooltip="matTooltip"
+                    (mouseenter)="showTooltip(freeDstTooltip, bindDst)"
+                    (mouseleave)="freeDstTooltip.hide()"
+                    (mousedown)="freeDstTooltip.hide()">
+                    {{bindDst.name}}
+                </div>
             </div>
-        </div>
-        <div >
-
         </div>
     </div>
 </div>

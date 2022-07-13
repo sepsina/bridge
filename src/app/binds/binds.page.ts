@@ -1,4 +1,4 @@
-import { Component, Inject, NgZone, AfterViewInit } from '@angular/core';
+import { Component, Inject, NgZone, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
 import { SerialLinkService } from '../services/serial-link.service';
 import { StorageService } from '../services/storage.service';
 import { UtilsService } from '../services/utils.service';
@@ -12,6 +12,8 @@ import * as gIF from '../gIF'
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 
 const EMPTY_NAME = '--- empty ---';
+const UNKNOWN_NAME = 'unknown';
+const USED_NAME = '--- used ---';
 
 @Component({
     selector: 'app-binds',
@@ -20,8 +22,11 @@ const EMPTY_NAME = '--- empty ---';
 })
 export class EditBinds implements AfterViewInit {
 
+    @ViewChild('bindBoxRef', {read: ElementRef, static:false}) bindBoxRef: ElementRef;
+    @ViewChild('usedWrapRef', {read: ElementRef, static:false}) wrapRef: ElementRef;
+
     allBindSrc: gIF.hostedBinds_t[] = [];
-    bindSrc: gIF.hostedBinds_t;
+    bindSrc = {} as gIF.hostedBinds_t;
     usedBindDst: gIF.bind_t[] = [];
     freeBindDst: gIF.bind_t[] = [];
     allBindDst: gIF.bind_t[] = [];
@@ -30,9 +35,6 @@ export class EditBinds implements AfterViewInit {
     selFreeBindDst: gIF.bind_t = null;
 
     bindSourceDesc: gIF.descVal_t[] = [];
-
-    emptyFlag = true;
-    noSrcBinds = true;
 
     nameFormCtrl = new FormControl('', [Validators.required]);
 
@@ -89,12 +91,17 @@ export class EditBinds implements AfterViewInit {
                 this.setBinds(this.bindSrc);
             });
             this.setBindSourceDesc(this.bindSrc);
-            this.noSrcBinds = false;
         }
-        else {
-            this.noSrcBinds = true;
-            this.emptyFlag = true;
-        }
+
+        setTimeout(() => {
+            const boxHeight = this.bindBoxRef.nativeElement.offsetHeight;
+            let boxNum = this.usedBindDst.length;
+            if(boxNum > 4){
+                boxNum = 4;
+            }
+            const wrapHeight = boxNum * boxHeight;
+            this.wrapRef.nativeElement.style.height = `${wrapHeight}px`;
+        }, 200);
     }
 
     /***********************************************************************************************
@@ -130,7 +137,7 @@ export class EditBinds implements AfterViewInit {
             else {
                 let bind = {} as gIF.bind_t;
                 bind.valid = false;
-                bind.name = 'unknown';
+                bind.name = UNKNOWN_NAME;
                 this.usedBindDst.push(bind);
             }
         }
@@ -140,11 +147,9 @@ export class EditBinds implements AfterViewInit {
                 numBindSrc += bind.bindsDst.length;
             }
         }
-        this.emptyFlag = true;
         let numEmpty = 0;
         if(numBindSrc < bindSrc.maxBinds){
             numEmpty = bindSrc.maxBinds - numBindSrc;
-            this.emptyFlag = false;
         }
         let numUsed = 0;
         if(this.usedBindDst.length < numBindSrc){
@@ -159,7 +164,7 @@ export class EditBinds implements AfterViewInit {
         for(let i = 0; i < numUsed; i++){
             let bind = {} as gIF.bind_t;
             bind.valid = false;
-            bind.name = '--- used ---';
+            bind.name = USED_NAME;
             this.usedBindDst.push(bind);
         }
         for(let i = this.freeBindDst.length; i < gConst.MAX_SRC_BINDS; i++){
@@ -241,7 +246,9 @@ export class EditBinds implements AfterViewInit {
      *
      */
     public wrSrcBinds(){
-        this.serial.wrBinds(JSON.stringify(this.bindSrc));
+        if(this.bindSrc){
+            this.serial.wrBinds(JSON.stringify(this.bindSrc));
+        }
     }
 
     /***********************************************************************************************
@@ -267,48 +274,65 @@ export class EditBinds implements AfterViewInit {
     }
 
     /***********************************************************************************************
-     * fn          save
-     *
-     * brief
-     *
-     *
-    save() {
-        this.dialogRef.close();
-    }
-    */
-
-    /***********************************************************************************************
      * fn          usedDrop
      *
      * brief
      *
      */
     usedDrop(event: CdkDragDrop<any[]>) {
+
+        let idx = 0;
+        let len = 0;
+        let fullFlag = true;
+
+        const empty = {} as gIF.bind_t;
+        empty.valid = false;
+        empty.name = EMPTY_NAME;
+
         if(event.previousContainer !== event.container){
-            let i = this.usedBindDst.findIndex((used)=>{
-                if(used.name == EMPTY_NAME){
-                    return true;
+            idx = 0;
+            len = this.usedBindDst.length;
+            fullFlag = true;
+            while(idx < len){
+                if(this.usedBindDst[idx].name === EMPTY_NAME){
+                    fullFlag = false;
+                    break;
                 }
-                return false;
-            });
-            const empty = {} as gIF.bind_t;
-            empty.valid = false;
-            empty.name = EMPTY_NAME;
-
-            if(i > -1){
-                const bind = this.freeBindDst.splice(event.previousIndex, 1, empty)[0];
-                this.usedBindDst.splice(event.currentIndex, 0, bind); // insert
-
-                let bindDst = {} as gIF.bindDst_t;
-                bindDst.dstExtAddr = bind.extAddr;
-                bindDst.dstEP = bind.endPoint;
-                this.bindSrc.bindsDst.push(bindDst);
-
-                if(i >= event.currentIndex){
-                    i++;
-                }
-                this.usedBindDst.splice(i, 1);
+                idx++;
             }
+            if(fullFlag === true){
+                return;
+            }
+
+            const bind = this.freeBindDst.splice(event.previousIndex, 1, empty)[0];
+            this.usedBindDst.splice(event.currentIndex, 0, bind); // insert
+
+            let done = false;
+            idx = event.currentIndex + 1;
+            len = this.usedBindDst.length
+            while(idx < len){
+                if(this.usedBindDst[idx].name == EMPTY_NAME){
+                    this.usedBindDst.splice(idx, 1);
+                    done = true;
+                    break;
+                }
+                idx++;
+            }
+            if(done == false){
+                idx = 0;
+                while(idx < event.currentIndex){
+                    if(this.usedBindDst[idx].name == EMPTY_NAME){
+                        this.usedBindDst.splice(idx, 1);
+                        break;
+                    }
+                    idx++;
+                }
+            }
+
+            let bindDst = {} as gIF.bindDst_t;
+            bindDst.dstExtAddr = bind.extAddr;
+            bindDst.dstEP = bind.endPoint;
+            this.bindSrc.bindsDst.push(bindDst);
         }
         else {
             moveItemInArray(event.container.data,
@@ -325,37 +349,48 @@ export class EditBinds implements AfterViewInit {
      */
     freeDrop(event: CdkDragDrop<any[]>) {
 
-        if(event.previousContainer !== event.container){
-            let i = this.freeBindDst.findIndex((free)=>{
-                if(free.name == EMPTY_NAME){
-                    return true;
-                }
-                return false;
-            });
-            const empty = {} as gIF.bind_t;
-            empty.valid = false;
-            empty.name = EMPTY_NAME;
+        let idx = 0;
+        let len = 0;
 
+        const empty = {} as gIF.bind_t;
+        empty.valid = false;
+        empty.name = EMPTY_NAME;
+
+        if(event.previousContainer !== event.container){
             const bind = this.usedBindDst.splice(event.previousIndex, 1, empty)[0];
             this.freeBindDst.splice(event.currentIndex, 0, bind); // insert
 
-            if(i > -1) {
-                if(i >= event.currentIndex){
-                    i++;
+            let done = false;
+            idx = event.currentIndex + 1;
+            len = this.freeBindDst.length
+            while(idx < len){
+                if(this.freeBindDst[idx].name == EMPTY_NAME){
+                    this.freeBindDst.splice(idx, 1);
+                    done = true;
+                    break;
                 }
-                this.freeBindDst.splice(i, 1);
+                idx++;
             }
-
-            let j = this.bindSrc.bindsDst.findIndex((bindDst) => {
-                if(bind.extAddr === bindDst.dstExtAddr) {
-                    if(bind.endPoint === bindDst.dstEP) {
-                        return true;
+            if(done == false){
+                idx = 0;
+                while(idx < event.currentIndex){
+                    if(this.freeBindDst[idx].name == EMPTY_NAME){
+                        this.freeBindDst.splice(idx, 1);
+                        break;
+                    }
+                    idx++;
+                }
+            }
+            idx = 0;
+            len = this.bindSrc.bindsDst.length;
+            while(idx < len){
+                if(this.bindSrc.bindsDst[idx].dstExtAddr === bind.extAddr){
+                    if(this.bindSrc.bindsDst[idx].dstEP === bind.endPoint){
+                        this.bindSrc.bindsDst.splice(idx, 1);
+                        break;
                     }
                 }
-                return false;
-            });
-            if (j > -1) {
-                this.bindSrc.bindsDst.splice(j, 1);
+                idx++;
             }
         }
         else {

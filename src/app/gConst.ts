@@ -78,7 +78,7 @@ export const ACUATOR_010_ON_OFF = 1001;
 
 
 export const MAX_DST_BINDS = 4;
-export const MAX_SRC_BINDS = 13;
+export const MAX_SRC_BINDS = 14;
 
 export const ATTR_TTL = 600; // seconds
 export const ATTR_VALID_TTL = 120; // seconds

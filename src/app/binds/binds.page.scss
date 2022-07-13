@@ -17,21 +17,8 @@
   cursor: move;
   flex: 1 1 100%;
 }
-/*
-.binds-frame{
-    border: solid 2px rgb(2, 141, 25);
-  width: 100%;
-  max-height: 85vh;
-  overflow: auto;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: stretch;
-}
-*/
+
 .bind-container {
-  //flex: 1 1 100%;
-  //width: 100%;
   display: flex;
   flex-direction: row;
   align-items: stretch;
@@ -108,15 +95,13 @@
   justify-content: center;
   align-items: stretch;
 }
-#usedBindsList {
-    border: solid 1px #ccc;
-    min-height: 60px;
-    background: white;
-    border-radius: 4px;
-    overflow: auto;
+
+#used-binds-wrap {
     display: flex;
     flex-direction: column;
+    justify-content: flex-start;
     align-items: stretch;
+    min-height: 100px;
 }
 
 .sel-dst-bind-desc {
@@ -142,11 +127,11 @@
 }
 
 .dst-binds-container {
+  flex: 1 1 50%;
   display: flex;
   flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
-  flex: 1 1 50%;
   padding: 5px;
   gap: 10px;
 }
@@ -160,19 +145,17 @@
   padding-left: 0.5em;
 }
 
-#freeBindsList {
-    border: solid 1px #ccc;
-    min-height: 60px;
-    max-height: 300px;
-    background: white;
-    border-radius: 4px;
+.free-binds-wrap {
+    flex: 1 1 100%;
     overflow: auto;
     display: flex;
     flex-direction: column;
+    justify-content: flex-start;
     align-items: stretch;
 }
 
 .binds-list {
+    flex: 1 1 0; // prevent child to stretch parent
     border: solid 1px #ccc;
     min-height: 60px;
     background: white;
@@ -204,7 +187,6 @@
     color: darkgray;
     cursor: default;
 }
-
 .cdk-drag-preview {
     box-sizing: border-box;
     border-radius: 4px;
@@ -212,27 +194,17 @@
                 0 8px 10px 1px rgba(0, 0, 0, 0.14),
                 0 3px 14px 2px rgba(0, 0, 0, 0.12);
 }
-
 .cdk-drag-placeholder {
     opacity: 0;
 }
-
 .cdk-drag-animating {
     transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
 }
-
+/*
 .bind-box:last-child {
-    border: none;
+    //border: none;
 }
-
+*/
 .binds-list.cdk-drop-list-dragging .bind-box:not(.cdk-drag-placeholder) {
     transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
 }
-
-#freeBindsList.cdk-drop-list-dragging .bind-box:not(.cdk-drag-placeholder) {
-    transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
-}
-#usedBindsList.cdk-drop-list-dragging .bind-box:not(.cdk-drag-placeholder) {
-    transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
-}
-
