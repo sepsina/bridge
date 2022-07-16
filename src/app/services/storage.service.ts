@@ -147,7 +147,7 @@ export class StorageService {
      *
      */
     setBindsName(name: string,
-                binds: gIF.hostedBinds_t): gIF.storedBinds_t {
+                 binds: gIF.hostedBinds_t): gIF.storedBinds_t {
         const key = this.bindsKey(binds);
         const val: gIF.hostedBinds_t = this.bindsMap.get(key);
         if(val) {

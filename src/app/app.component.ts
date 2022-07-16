@@ -378,7 +378,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
             };
             const dialogConfig = new MatDialogConfig();
             dialogConfig.data = dlgData;
-            dialogConfig.width = '560px';
+            //dialogConfig.minWidth = '300px';
             dialogConfig.autoFocus = false;
             dialogConfig.disableClose = true;
             dialogConfig.panelClass = 'edit-binds-container';
