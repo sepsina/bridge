@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, OnInit, ViewChild, NgZone, OnDestroy, Inject } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnInit, ViewChild, NgZone, OnDestroy, Inject, Renderer2 } from '@angular/core';
 import { EventsService } from './services/events.service';
 import { SerialLinkService } from './services/serial-link.service';
 import { UdpService } from './services/udp.service';
@@ -20,6 +20,12 @@ import { fromEvent, Observable, Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { CdkDragEnd, CdkDragStart } from '@angular/cdk/drag-drop';
 
+const DUMMY_SCROLL = '- scroll -';
+const dumyScroll: gIF.scroll_t = {
+    name: DUMMY_SCROLL,
+    yPos: 0
+}
+
 @Component({
     selector: 'app-root',
     templateUrl: 'app.component.html',
@@ -39,6 +45,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     imgDim = {} as gIF.imgDim_t;
 
     scrolls: gIF.scroll_t[] = [
+        dumyScroll,
         {
             name: 'floor-1',
             yPos: 10
@@ -48,6 +55,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
             yPos: 50
         },
     ];
+
+    selScroll = this.scrolls[0];
 
     partDesc: gIF.partDesc_t[] = [];
     partMap = new Map();
@@ -61,7 +70,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
                 public storage: StorageService,
                 private matDialog: MatDialog,
                 private ngZone: NgZone,
-                private utils: UtilsService) {
+                private utils: UtilsService,
+                private renderer: Renderer2) {
         // ---
     }
 
@@ -86,11 +96,12 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
             this.udp.closeSocket();
             this.serialLink.closeComPort();
         };
-
+        /*
         this.resizeObservable$ = fromEvent(window, 'resize');
         this.resizeSubscription$ = this.resizeObservable$.pipe(debounceTime(500)).subscribe((evt)=>{
             this.scaleImgConteiner();
         });
+        */
     }
 
     /***********************************************************************************************
@@ -100,7 +111,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
      *
      */
     ngOnDestroy() {
-        this.resizeSubscription$.unsubscribe();
+        //this.resizeSubscription$.unsubscribe();
     }
 
     /***********************************************************************************************
@@ -143,7 +154,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
      *
      * brief
      *
-     */
+     *
     onScroll(idx) {
 
         const x = 0;
@@ -155,7 +166,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
             behavior: 'smooth'
         });
     }
-
+    */
     /***********************************************************************************************
      * fn          getAttrStyle
      *
@@ -163,6 +174,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
      *
      */
     getAttrStyle(attr: any) {
+
         let attrStyle = attr.value.style;
         let retStyle = {
             color: attrStyle.color,
@@ -213,6 +225,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
      *
      */
     setBkgImg(imgSrc: string) {
+
         let bkgImg = new Image();
         bkgImg.src = imgSrc;
         bkgImg.onload = ()=>{
@@ -222,11 +235,18 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
             let divDim = el.getBoundingClientRect();
             this.imgDim.width = divDim.width;
             this.imgDim.height = Math.round((divDim.width / bkgImg.width) * bkgImg.height);
+            this.renderer.setStyle(el, 'height', `${this.imgDim.height}px`);
+            this.renderer.setStyle(el, 'backgroundImage', `url(${imgSrc})`);
+            this.renderer.setStyle(el, 'backgroundAttachment', 'scroll');
+            this.renderer.setStyle(el, 'backgroundRepeat', 'no-repeat');
+            this.renderer.setStyle(el, 'backgroundSize', 'contain');
+            /*
             el.style.height = `${this.imgDim.height}px`;
             el.style.backgroundImage = `url(${imgSrc})`;
             el.style.backgroundAttachment = 'scroll';
             el.style.backgroundRepeat = 'no-repeat';
             el.style.backgroundSize = 'contain';
+            */
         };
     }
 
@@ -235,7 +255,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
      *
      * brief
      *
-     */
+     *
     scaleImgConteiner() {
 
         const el = this.containerRef.nativeElement;
@@ -247,7 +267,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         this.imgDim.height = Math.round((divDim.width / this.bkgImgWidth) * this.bkgImgHeight);
         el.style.height = `${this.imgDim.height}px`;
     }
-
+    */
     /***********************************************************************************************
      * @fn          onDragEnded
      *
@@ -332,10 +352,11 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
             dlgRef.afterOpened().subscribe(()=>{
                 // ---
             });
-            dlgRef.afterClosed().subscribe((data) => {
+            dlgRef.afterClosed().subscribe((data: gIF.scroll_t[]) => {
                 if (data) {
                     this.scrolls = data;
-                    this.storage.setScrolls(this.scrolls);
+                    this.scrolls.unshift(dumyScroll);
+                    this.storage.setScrolls(data);
                 }
             });
         }, 10);
@@ -424,4 +445,51 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         tt.hide();
     }
     */
+
+    /***********************************************************************************************
+     * fn          scrollSelChange
+     *
+     * brief
+     *
+     */
+    scrollSelChange(scroll){
+
+        console.log(scroll);
+        if(scroll.value){
+            if(scroll.value.name !== DUMMY_SCROLL){
+                const x = 0;
+                const y = (scroll.value.yPos * this.imgDim.height) / 100;
+
+                this.floorPlanRef.nativeElement.scrollTo({
+                    top: y,
+                    left: x,
+                    behavior: 'smooth'
+                });
+                setTimeout(() => {
+                    this.selScroll = this.scrolls[0];
+                }, 1000);
+            }
+        }
+    }
+
+    /***********************************************************************************************
+     * fn          onResize
+     *
+     * brief
+     *
+     */
+    onResize(event) {
+        const rect = event.contentRect;
+        console.log(`w: ${rect.width}, h: ${rect.height}`);
+
+        //this.scaleImgConteiner();
+        const el = this.containerRef.nativeElement;
+
+        this.imgDim.width = rect.width;
+        this.imgDim.height = Math.round((rect.width / this.bkgImgWidth) * this.bkgImgHeight);
+        this.ngZone.run(()=>{
+            this.renderer.setStyle(el, 'height', `${this.imgDim.height}px`);
+        });
+        //this.containerRef.nativeElement.style.height = `${this.imgDim.height}px`;
+    }
 }

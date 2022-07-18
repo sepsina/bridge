@@ -9,9 +9,9 @@
 #toolbar-frame {
     display: flex;
     flex-direction: row;
-    justify-content: center;
+    justify-content: flex-end;
     align-items: center;
-    align-self: stretch;
+    //align-self: stretch;
     border: 1px solid lightgray;
     gap: 10px;
     //margin: 5px;
@@ -50,7 +50,8 @@
 }
 
 #floor-plan {
-    flex: 1 1 100%;
+    flex: 1 1 auto;
+    //height: 100%;
     border: 2px solid rgb(3, 111, 253);
     border-radius: 6px;
     margin: 0px;
@@ -155,6 +156,7 @@
     background-color: white;
     padding: 5px;
     z-index: 100;
+    min-height: 15px;
 }
 
 #btm-bar {
@@ -174,4 +176,46 @@
   left: 50%;
   transform: translate(-50%, -50%);
 }
+
+#main-container{
+    box-sizing: border-box;
+    border: 2px solid green;
+    flex: 1 1 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-items: stretch;
+    overflow: hidden;
+}
+#side-bar{
+    box-sizing: border-box;
+    //flex: 1 1 auto;
+    height: 100%;
+    border: 2px solid orange;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-items: stretch;
+    overflow: auto;
+    padding: 5px;
+    gap: 15px;
+}
+#test{
+    flex: 1 1 auto;
+    height: 100%;
+    display: flex;
+}
+
+#app-title{
+    flex: 1 1 100%;
+    text-align: left;
+}
+
+
+#scrollSel{
+    flex: 1 1 auto;
+    border: 1px solid lightblue;
+    border-radius: 6px;
+}
+
 

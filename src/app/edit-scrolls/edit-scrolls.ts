@@ -5,6 +5,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import * as gIF from '../gIF'
 
 import { Subscription } from 'rxjs';
+import { debounceTime } from "rxjs/operators";
 
 @Component({
     selector: 'app-edit-scrolls',
@@ -45,6 +46,7 @@ export class EditScrolls implements OnInit, AfterViewInit, OnDestroy {
      */
     ngOnInit(): void {
 
+        this.dlgData.scrolls.shift();
         for(let i = 0; i < this.dlgData.scrolls.length; i++){
             let scroll = {} as gIF.scroll_t;
             scroll.name = this.dlgData.scrolls[i].name;
@@ -61,7 +63,7 @@ export class EditScrolls implements OnInit, AfterViewInit, OnDestroy {
             if(scroll){
                 this.nameFormCtrl.setValue(scroll.name);
                 this.yPosFormCtrl.setValue(scroll.yPos);
-                this.yPosSet(scroll.yPos);
+                //this.yPosSet(scroll.yPos);
             }
         });
         this.subscription.add(scrollSubscription);
@@ -86,7 +88,7 @@ export class EditScrolls implements OnInit, AfterViewInit, OnDestroy {
                 Validators.max(this.maxPos)
             ]
         );
-        const yPosSubscription = this.yPosFormCtrl.valueChanges.subscribe((pos)=>{
+        const yPosSubscription = this.yPosFormCtrl.valueChanges.pipe(debounceTime(0)).subscribe((pos)=>{
             this.yPosFormCtrl.markAsTouched();
             (<gIF.scroll_t>this.scrollFormCtrl.value).yPos = pos;
             if(pos) {
@@ -115,7 +117,7 @@ export class EditScrolls implements OnInit, AfterViewInit, OnDestroy {
                     this.scrollFormCtrl.setValue(scroll);
                     this.nameFormCtrl.setValue(scroll.name);
                     this.yPosFormCtrl.setValue(scroll.yPos);
-                    this.yPosSet(scroll.yPos);
+                    //this.yPosSet(scroll.yPos);
                 });
             }
         }, 0);
@@ -217,6 +219,8 @@ export class EditScrolls implements OnInit, AfterViewInit, OnDestroy {
      */
     yPosSet(pos: number) {
 
+        console.log(`yPos: ${pos}`);
+
         if(pos < 0){
             pos = 0;
         }
@@ -247,7 +251,7 @@ export class EditScrolls implements OnInit, AfterViewInit, OnDestroy {
         let scroll = {} as gIF.scroll_t;
         scroll.name = `new_${this.newIdx++}`;
         this.newIdx++;
-        scroll.yPos = 0;
+        scroll.yPos = 1;
 
         this.scrolls.push(scroll);
         this.scrollFormCtrl.setValue(scroll);
@@ -284,10 +288,10 @@ export class EditScrolls implements OnInit, AfterViewInit, OnDestroy {
      *
      * @brief
      *
-     */
+     *
     selChanged(event){
         console.log(event);
         this.yPosSet(event.value.yPos);
     }
-
+    */
 }

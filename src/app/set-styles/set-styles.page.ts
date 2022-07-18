@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject, ViewChild, ElementRef, AfterViewInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, Inject, ViewChild, ElementRef, AfterViewInit, OnDestroy, Renderer2 } from '@angular/core';
 import { SerialLinkService } from '../services/serial-link.service';
 import { StorageService } from '../services/storage.service';
 import { Validators, FormGroup, FormControl } from '@angular/forms';
@@ -8,6 +8,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import * as gConst from '../gConst';
 import * as gIF from '../gIF'
 import { Subscription } from 'rxjs';
+import { debounceTime } from "rxjs/operators";
 
 @Component({
     selector: 'app-set-styles',
@@ -17,6 +18,7 @@ import { Subscription } from 'rxjs';
 export class SetStyles implements OnInit, AfterViewInit, OnDestroy {
 
     @ViewChild('testView') testView: ElementRef;
+    testEl: HTMLElement;
 
     //selAttr: gIF.hostedAttr_t;
     minFontSize = 5
@@ -59,7 +61,8 @@ export class SetStyles implements OnInit, AfterViewInit, OnDestroy {
                 @Inject(MAT_DIALOG_DATA) public keyVal: any,
                 public events: EventsService,
                 public serialLink: SerialLinkService,
-                public storage: StorageService) {
+                public storage: StorageService,
+                private renderer: Renderer2) {
         this.selAttr = this.keyVal.value;
     }
 
@@ -68,7 +71,21 @@ export class SetStyles implements OnInit, AfterViewInit, OnDestroy {
     }
 
     ngAfterViewInit(): void {
+        this.testEl = this.testView.nativeElement;
+        this.renderer.setStyle(this.testEl, 'color', this.selAttr.style.color);
+        this.renderer.setStyle(this.testEl, 'backgroundColor', this.selAttr.style.bgColor);
+        this.renderer.setStyle(this.testEl, 'fontSize', `${this.selAttr.style.fontSize}px`);
 
+        this.renderer.setStyle(this.testEl, 'borderColor', this.selAttr.style.borderColor);
+        this.renderer.setStyle(this.testEl, 'borderWidth', `${this.selAttr.style.borderWidth}px`);
+        this.renderer.setStyle(this.testEl, 'borderStyle', this.selAttr.style.borderStyle);
+        this.renderer.setStyle(this.testEl, 'borderRadius', `${this.selAttr.style.borderRadius}px`);
+
+        this.renderer.setStyle(this.testEl, 'paddingTop', `${this.selAttr.style.paddingTop}px`);
+        this.renderer.setStyle(this.testEl, 'paddingRight', `${this.selAttr.style.paddingRight}px`);
+        this.renderer.setStyle(this.testEl, 'paddingBottom', `${this.selAttr.style.paddingBottom}px`);
+        this.renderer.setStyle(this.testEl, 'paddingLeft', `${this.selAttr.style.paddingLeft}px`);
+        /*
         this.testView.nativeElement.style.color = this.selAttr.style.color;
         this.testView.nativeElement.style.backgroundColor = this.selAttr.style.bgColor;
         this.testView.nativeElement.style.fontSize = `${this.selAttr.style.fontSize}px`;
@@ -82,6 +99,7 @@ export class SetStyles implements OnInit, AfterViewInit, OnDestroy {
         this.testView.nativeElement.style.paddingRight = `${this.selAttr.style.paddingRight}px`;
         this.testView.nativeElement.style.paddingBottom = `${this.selAttr.style.paddingBottom}px`;
         this.testView.nativeElement.style.paddingLeft = `${this.selAttr.style.paddingLeft}px`;
+        */
     }
 
     ngOnInit() {
@@ -115,7 +133,8 @@ export class SetStyles implements OnInit, AfterViewInit, OnDestroy {
             ]
         );
         const colorSubscription = this.colorFormCtrl.valueChanges.subscribe((color)=>{
-            this.testView.nativeElement.style.color = color;
+            this.renderer.setStyle(this.testEl, 'color', color);
+            //this.testView.nativeElement.style.color = color;
         });
         this.subscription.add(colorSubscription);
 
@@ -126,7 +145,8 @@ export class SetStyles implements OnInit, AfterViewInit, OnDestroy {
             ]
         );
         const bgColorSubscription = this.bgColorFormCtrl.valueChanges.subscribe((color)=>{
-            this.testView.nativeElement.style.backgroundColor = color;
+            this.renderer.setStyle(this.testEl, 'backgroundColor', color);
+            //this.testView.nativeElement.style.backgroundColor = color;
         });
         this.subscription.add(bgColorSubscription);
 
@@ -138,10 +158,11 @@ export class SetStyles implements OnInit, AfterViewInit, OnDestroy {
                 Validators.max(this.maxFontSize)
             ]
         );
-        const fontSizeSubscription = this.fontSizeFormCtrl.valueChanges.subscribe((size)=>{
+        const fontSizeSubscription = this.fontSizeFormCtrl.valueChanges.pipe(debounceTime(0)).subscribe((size)=>{
             if(size > this.minFontSize){
                 if(size < this.maxFontSize){
-                    this.testView.nativeElement.style.fontSize = `${size}px`;
+                    this.renderer.setStyle(this.testEl, 'fontSize', `${size}px`);
+                    //this.testView.nativeElement.style.fontSize = `${size}px`;
                 }
             }
         });
@@ -154,7 +175,8 @@ export class SetStyles implements OnInit, AfterViewInit, OnDestroy {
             ]
         );
         const borderColorSubscription = this.borderColorFormCtrl.valueChanges.subscribe((color)=>{
-            this.testView.nativeElement.style.borderColor = color;
+            this.renderer.setStyle(this.testEl, 'borderColor', color);
+            //this.testView.nativeElement.style.borderColor = color;
         });
         this.subscription.add(borderColorSubscription);
 
@@ -166,10 +188,11 @@ export class SetStyles implements OnInit, AfterViewInit, OnDestroy {
                 Validators.max(this.maxBorderWidth)
             ]
         );
-        const borderWidthSubscription = this.borderWidthFormCtrl.valueChanges.subscribe((width)=>{
+        const borderWidthSubscription = this.borderWidthFormCtrl.valueChanges.pipe(debounceTime(0)).subscribe((width)=>{
             if(width > -1){
                 if(width <= this.maxBorderWidth){
-                    this.testView.nativeElement.style.borderWidth = `${width}px`;
+                    this.renderer.setStyle(this.testEl, 'borderWidth', `${width}px`);
+                    //this.testView.nativeElement.style.borderWidth = `${width}px`;
                 }
             }
         });
@@ -193,7 +216,8 @@ export class SetStyles implements OnInit, AfterViewInit, OnDestroy {
                 case 'ridge':
                 case 'inset':
                 case 'outset':
-                    this.testView.nativeElement.style.borderStyle = style;
+                    this.renderer.setStyle(this.testEl, 'borderStyle', style);
+                    //this.testView.nativeElement.style.borderStyle = style;
                     break;
             }
         });
@@ -207,10 +231,11 @@ export class SetStyles implements OnInit, AfterViewInit, OnDestroy {
                 Validators.max(this.maxBorderRadius)
             ]
         );
-        const borderRadiusSubscription = this.borderRadiusFormCtrl.valueChanges.subscribe((radius)=>{
+        const borderRadiusSubscription = this.borderRadiusFormCtrl.valueChanges.pipe(debounceTime(0)).subscribe((radius)=>{
             if(radius > -1){
                 if(radius <= this.maxBorderRadius){
-                    this.testView.nativeElement.style.borderRadius = `${radius}px`;
+                    this.renderer.setStyle(this.testEl, 'borderRadius', `${radius}px`);
+                    //this.testView.nativeElement.style.borderRadius = `${radius}px`;
                 }
             }
         });
@@ -224,10 +249,11 @@ export class SetStyles implements OnInit, AfterViewInit, OnDestroy {
                 Validators.max(this.maxPaddingTop)
             ]
         );
-        const paddingTopSubscription = this.paddingTopFormCtrl.valueChanges.subscribe((padding)=>{
+        const paddingTopSubscription = this.paddingTopFormCtrl.valueChanges.pipe(debounceTime(0)).subscribe((padding)=>{
             if(padding > -1){
                 if(padding <= this.maxPaddingTop){
-                    this.testView.nativeElement.style.paddingTop = `${padding}px`;
+                    this.renderer.setStyle(this.testEl, 'paddingTop', `${padding}px`);
+                    //this.testView.nativeElement.style.paddingTop = `${padding}px`;
                 }
             }
         });
@@ -241,10 +267,11 @@ export class SetStyles implements OnInit, AfterViewInit, OnDestroy {
                 Validators.max(this.maxPaddingRight)
             ]
         );
-        const paddingRightSubscription = this.paddingRightFormCtrl.valueChanges.subscribe((padding)=>{
+        const paddingRightSubscription = this.paddingRightFormCtrl.valueChanges.pipe(debounceTime(0)).subscribe((padding)=>{
             if(padding > -1){
                 if(padding <= this.maxPaddingRight){
-                    this.testView.nativeElement.style.paddingRight = `${padding}px`;
+                    this.renderer.setStyle(this.testEl, 'paddingRight', `${padding}px`);
+                    //this.testView.nativeElement.style.paddingRight = `${padding}px`;
                 }
             }
         });
@@ -258,10 +285,11 @@ export class SetStyles implements OnInit, AfterViewInit, OnDestroy {
                 Validators.max(this.maxPaddingBottom)
             ]
         );
-        const paddingBottomSubscription = this.paddingBottomFormCtrl.valueChanges.subscribe((padding)=>{
+        const paddingBottomSubscription = this.paddingBottomFormCtrl.valueChanges.pipe(debounceTime(0)).subscribe((padding)=>{
             if(padding > -1){
                 if(padding <= this.maxPaddingBottom){
-                    this.testView.nativeElement.style.paddingBottom = `${padding}px`;
+                    this.renderer.setStyle(this.testEl, 'paddingBottom', `${padding}px`);
+                    //this.testView.nativeElement.style.paddingBottom = `${padding}px`;
                 }
             }
         });
@@ -275,10 +303,11 @@ export class SetStyles implements OnInit, AfterViewInit, OnDestroy {
                 Validators.max(this.maxPaddingLeft)
             ]
         );
-        const paddingLeftSubscription = this.paddingLeftFormCtrl.valueChanges.subscribe((padding)=>{
+        const paddingLeftSubscription = this.paddingLeftFormCtrl.valueChanges.pipe(debounceTime(0)).subscribe((padding)=>{
             if(padding > -1){
                 if(padding <= this.maxPaddingLeft){
-                    this.testView.nativeElement.style.paddingLeft = `${padding}px`;
+                    this.renderer.setStyle(this.testEl, 'paddingLeft', `${padding}px`);
+                    //this.testView.nativeElement.style.paddingLeft = `${padding}px`;
                 }
             }
         });

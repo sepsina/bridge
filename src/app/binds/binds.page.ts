@@ -31,6 +31,7 @@ export class EditBinds implements AfterViewInit {
     freeBindDst: gIF.bind_t[] = [];
     allBindDst: gIF.bind_t[] = [];
 
+    srcValid = false;
     //selUsedBindDst: gIF.bind_t = null;
     //selFreeBindDst: gIF.bind_t = null;
 
@@ -88,6 +89,7 @@ export class EditBinds implements AfterViewInit {
             }
         }
         if(this.allBindSrc.length){
+            this.srcValid = true;
             this.bindSrc = this.allBindSrc[0];
             this.nameFormCtrl.setValue(this.bindSrc.name);
             this.ngZone.run(()=>{

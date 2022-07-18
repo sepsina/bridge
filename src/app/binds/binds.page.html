@@ -71,7 +71,7 @@
 <div class="send-binds-conteiner">
     <button id="send_binds"
             mat-stroked-button
-            (click)="wrSrcBinds()">
+            (click)="wrSrcBinds()" [disabled]="!srcValid">
         Send
     </button>
     <button mat-stroked-button
