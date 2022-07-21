@@ -240,13 +240,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
             this.renderer.setStyle(el, 'backgroundAttachment', 'scroll');
             this.renderer.setStyle(el, 'backgroundRepeat', 'no-repeat');
             this.renderer.setStyle(el, 'backgroundSize', 'contain');
-            /*
-            el.style.height = `${this.imgDim.height}px`;
-            el.style.backgroundImage = `url(${imgSrc})`;
-            el.style.backgroundAttachment = 'scroll';
-            el.style.backgroundRepeat = 'no-repeat';
-            el.style.backgroundSize = 'contain';
-            */
         };
     }
 
