@@ -71,6 +71,7 @@
     "angular2-draggable": "^2.3.2",
     "base64-arraybuffer": "^1.0.2",
     "chrome-apps-serialport": "^1.0.8",
+    "material-icons": "^1.11.6",
     "ngx-perfect-scrollbar": "^10.1.1",
     "ngx-scrollbar": "^4.2.0",
     "node-localstorage": "^2.2.1",
