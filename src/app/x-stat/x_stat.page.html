@@ -1,0 +1,112 @@
+<div id="dlg-head"
+     cdkDrag
+     cdkDragRootElement=".cdk-overlay-pane"
+     cdkDragBoundary=".cdk-overlay-container">
+    <div id="binds-title" cdkDragHandle>
+        binds
+    </div>
+    <button mat-icon-button (click)="close()">
+        <mat-icon>close</mat-icon>
+    </button>
+</div>
+
+<div class="bind-container">
+    <div class="src-binds-container">
+        <div class="src-binds-header">
+            Source Binds
+        </div>
+        <mat-select class="src-binds-sel"
+                    [(value)]="bindSrc"
+                    (selectionChange)="bindSrcSelected($event)">
+            <mat-option *ngFor="let bind of allBindSrc"
+                        [value]="bind">
+                {{bind.name}}
+            </mat-option>
+        </mat-select>
+        <div class="source-bind-desc">
+            <div *ngFor="let desc of bindSourceDesc">
+                <span class="desc-label">{{desc.key}}</span><span class="desc-value">{{desc.value}}</span>
+            </div>
+        </div>
+        <div class="edit-binds">
+            <div class="edit-binds-name">
+                <mat-form-field>
+                    <mat-label>Edit Name</mat-label>
+                    <input class="binds-name"
+                            type="text"
+                            matInput [formControl]="nameFormCtrl">
+                    <mat-hint align="end">set name for bind source</mat-hint>
+                    <mat-error *ngIf="nameFormCtrl.hasError('required')">
+                        Enter valid location
+                    </mat-error>
+                </mat-form-field>
+            </div>
+            <div class="edit-binds-button">
+                <button mat-stroked-button
+                        (click)="wrBindName()">
+                    Write
+                </button>
+            </div>
+        </div>
+        <div id="used-binds-wrap" #usedWrapRef>
+            <div class="binds-list"
+                 cdkDropList
+                 #usedList="cdkDropList"
+                 [cdkDropListConnectedTo]="[freeList]"
+                 [cdkDropListData]="usedBindDst"
+                 (cdkDropListDropped)="usedDrop($event)">
+                <div *ngFor="let bindDst of usedBindDst"
+                     class="bind-box"
+                     #bindBoxRef
+                     cdkDrag
+                     [cdkDragDisabled]='!bindDst.valid'
+                     matTooltip
+                     [matTooltipDisabled]="!bindDst.valid"
+                     matTooltipPosition="after"
+                     #usedDstTooltip="matTooltip"
+                     (mouseenter)="showTooltip(usedDstTooltip, bindDst)"
+                     (mouseleave)="usedDstTooltip.hide()"
+                     (mousedown)="usedDstTooltip.hide()">
+                    {{bindDst.name}}
+                </div>
+
+            </div>
+        </div>
+        <div class="send-binds-conteiner">
+            <button id="send_binds"
+                    mat-stroked-button
+                    (click)="wrSrcBinds()">
+                Send
+            </button>
+        </div>
+    </div>
+
+    <div class="dst-binds-container">
+        <div class="dst-binds-header">
+            Available Destinations
+        </div>
+        <div class="free-binds-wrap">
+            <div class="binds-list"
+                cdkDropList
+                #freeList="cdkDropList"
+                [cdkDropListConnectedTo]="[usedList]"
+                [cdkDropListData]="freeBindDst"
+                (cdkDropListDropped)="freeDrop($event)">
+                <div *ngFor="let bindDst of freeBindDst"
+                    class="bind-box"
+                    cdkDrag
+                    [cdkDragDisabled]='!bindDst.valid'
+                    matTooltip
+                    [matTooltipDisabled]="!bindDst.valid"
+                    matTooltipPosition="before"
+                    #freeDstTooltip="matTooltip"
+                    (mouseenter)="showTooltip(freeDstTooltip, bindDst)"
+                    (mouseleave)="freeDstTooltip.hide()"
+                    (mousedown)="freeDstTooltip.hide()">
+                    {{bindDst.name}}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
