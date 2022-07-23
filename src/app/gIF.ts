@@ -258,7 +258,7 @@ export interface thermostat_t {
     actuators: thermostatActuator_t[];
 }
 
-export interface on_off_server_t {
+export interface on_off_actuator_t {
     valid: boolean
     name: string;
     partNum: number;

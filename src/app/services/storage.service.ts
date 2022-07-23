@@ -271,4 +271,47 @@ export class StorageService {
         return key;
     }
 
+    /***********************************************************************************************
+     * fn          delThermostat
+     *
+     * brief
+     *
+     */
+    delThermostat(thermostat: gIF.thermostat_t) {
+
+        const key = this.thermostatKey(thermostat);
+        localStorage.removeItem(key);
+
+        return key;
+    }
+
+    /***********************************************************************************************
+     * fn          delAllThermostat
+     *
+     * brief
+     *
+     */
+    delAllThermostat() {
+
+        for(const key of this.nvThermostatsMap.keys()){
+            localStorage.removeItem(key);
+        }
+        this.nvThermostatsMap.clear();
+    }
+
+    /***********************************************************************************************
+     * fn          storeThermostat
+     *
+     * brief
+     *
+     */
+    storeThermostat(thermostat: gIF.thermostat_t) {
+
+        const key = this.thermostatKey(thermostat);
+        localStorage.setItem(key, JSON.stringify(thermostat));
+
+        this.nvThermostatsMap.set(key, thermostat);
+
+    }
+
 }
