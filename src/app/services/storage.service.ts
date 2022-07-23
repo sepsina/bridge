@@ -14,6 +14,8 @@ export class StorageService {
     nvAttrMap = new Map();
     nvBindsMap = new Map();
 
+    nvThermostatsMap = new Map();
+
     constructor() {
         setTimeout(()=>{
             this.init();
@@ -40,6 +42,9 @@ export class StorageService {
             }
             if(key.slice(0, 5) == 'binds') {
                 this.nvBindsMap.set(key, val);
+            }
+            if(key.slice(0, 10) == 'thermostat') {
+                this.nvThermostatsMap.set(key, val);
             }
         }
     }
@@ -123,14 +128,7 @@ export class StorageService {
      *
      */
     attrKey(params: any) {
-        /*
-        let key = 'attr-';
-        key += ('000' + params.shortAddr.toString(16)).slice(-4).toUpperCase() + ':';
-        key += ('0' + params.endPoint.toString(16)).slice(-2).toUpperCase() + ':';
-        key += ('000' + params.clusterID.toString(16)).slice(-4).toUpperCase() + ':';
-        key += ('000' + params.attrSetID.toString(16)).slice(-4).toUpperCase() + ':';
-        key += ('000' + params.attrID.toString(16)).slice(-4).toUpperCase();
-        */
+
         let key = `attr-${params.shortAddr.toString(16).padStart(4, '0').toUpperCase()}`;
         key += `:${params.endPoint.toString(16).padStart(2, '0').toUpperCase()}`;
         key += `:${params.clusterID.toString(16).padStart(4, '0').toUpperCase()}`;
@@ -189,12 +187,6 @@ export class StorageService {
      *
      */
     bindsKey(binds: gIF.hostedBinds_t) {
-        /*
-        let key = 'binds-';
-        key += ('000' + binds.srcShortAddr.toString(16)).slice(-4).toUpperCase() + ':';
-        key += ('0' + binds.srcEP.toString(16)).slice(-2).toUpperCase() + ':';
-        key += ('000' + binds.clusterID.toString(16)).slice(-4).toUpperCase();
-        */
         let key = `binds-${binds.srcShortAddr.toString(16).padStart(4, '0').toUpperCase()}`;
         key += `:${binds.srcEP.toString(16).padStart(2, '0').toUpperCase()}`;
         key += `:${binds.clusterID.toString(16).padStart(4, '0').toUpperCase()}`;
@@ -264,6 +256,19 @@ export class StorageService {
         }
 
         return null;
+    }
+
+    /***********************************************************************************************
+     * fn          thermostatKey
+     *
+     * brief
+     *
+     */
+    thermostatKey(thermostat: gIF.thermostat_t) {
+        let key = `thermostat-${thermostat.shortAddr.toString(16).padStart(4, '0').toUpperCase()}`;
+        key += `:${thermostat.endPoint.toString(16).padStart(2, '0').toUpperCase()}`;
+
+        return key;
     }
 
 }

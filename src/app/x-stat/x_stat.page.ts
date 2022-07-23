@@ -25,8 +25,7 @@ export class EditStats implements AfterViewInit {
     @ViewChild('bindBoxRef', {read: ElementRef, static:false}) bindBoxRef: ElementRef;
     @ViewChild('usedWrapRef', {read: ElementRef, static:false}) wrapRef: ElementRef;
 
-    allBindSrc: gIF.hostedBinds_t[] = [];
-    bindSrc = {} as gIF.hostedBinds_t;
+    //bindSrc = {} as gIF.hostedBinds_t;
     usedBindDst: gIF.bind_t[] = [];
     freeBindDst: gIF.bind_t[] = [];
     allBindDst: gIF.bind_t[] = [];
@@ -34,7 +33,13 @@ export class EditStats implements AfterViewInit {
     selUsedBindDst: gIF.bind_t = null;
     selFreeBindDst: gIF.bind_t = null;
 
-    bindSourceDesc: gIF.descVal_t[] = [];
+    thermostatDesc: gIF.descVal_t[] = [];
+
+    selThermostat: gIF.thermostat_t;
+    thermostats: gIF.thermostat_t[] = [];
+    on_off_all: gIF.on_off_server_t[] = [];
+    on_off_used: gIF.on_off_server_t[] = [];
+    //on_off_free: gIF.on_off_server_t[] = [];
 
     nameFormCtrl = new FormControl('', [Validators.required]);
 
@@ -67,9 +72,46 @@ export class EditStats implements AfterViewInit {
      */
     refresh() {
 
-        this.allBindSrc = JSON.parse(JSON.stringify(Array.from(this.storage.bindsMap.values())));
         let attribs: gIF.hostedAttr_t[] = JSON.parse(JSON.stringify(Array.from(this.storage.attrMap.values())));
 
+        this.thermostats = [];
+        this.on_off_all = [];
+        this.on_off_used = [];
+        //this.on_off_free = [];
+
+        for(const attr of attribs){
+            if(attr.clusterID === gConst.CLUSTER_ID_MS_TEMPERATURE_MEASUREMENT){
+                let t_stat = {} as gIF.thermostat_t;
+                t_stat.name = attr.name;
+                t_stat.partNum = attr.partNum;
+                t_stat.extAddr = attr.extAddr;
+                t_stat.shortAddr = attr.shortAddr;
+                t_stat.endPoint = attr.endPoint;
+                this.thermostats.push(t_stat);
+            }
+            if(attr.clusterServer){
+                if(attr.clusterID === gConst.CLUSTER_ID_GEN_ON_OFF){
+                    let on_off_server = {} as gIF.on_off_server_t;
+                    on_off_server.valid = true;
+                    on_off_server.name = attr.name;
+                    on_off_server.partNum = attr.partNum;
+                    on_off_server.extAddr = attr.extAddr;
+                    on_off_server.shortAddr = attr.shortAddr;
+                    on_off_server.endPoint = attr.endPoint;
+                    this.on_off_all.push(on_off_server);
+                }
+            }
+        }
+        if(this.thermostats.length){
+            this.selThermostat = this.thermostats[0];
+            this.nameFormCtrl.setValue(this.selThermostat.name);
+            this.ngZone.run(()=>{
+                this.setThermostat(this.selThermostat);
+            });
+            this.setThermostatDesc(this.selThermostat);
+
+        }
+        /*
         this.allBindDst = [];
         for(const attr of attribs) {
             if(attr.clusterServer){
@@ -90,9 +132,9 @@ export class EditStats implements AfterViewInit {
             this.ngZone.run(()=>{
                 this.setBinds(this.bindSrc);
             });
-            this.setBindSourceDesc(this.bindSrc);
+            this.setThermostatDesc(this.selThermostat);
         }
-
+        */
         setTimeout(() => {
             const boxHeight = this.bindBoxRef.nativeElement.offsetHeight;
             let boxNum = this.usedBindDst.length;
@@ -105,11 +147,61 @@ export class EditStats implements AfterViewInit {
     }
 
     /***********************************************************************************************
-     * fn          setBinds
+     * fn          setThermostat
      *
      * brief
      *
      */
+    setThermostat(t_stat: gIF.thermostat_t){
+
+        this.on_off_used = [];
+
+        const key = this.storage.thermostatKey(t_stat);
+        const nvThermostat: gIF.thermostat_t = this.storage.nvThermostatsMap.get(key);
+        if(nvThermostat){
+            for(const actuator of nvThermostat.actuators){
+                const idx = this.on_off_all.findIndex((on_off)=>{
+                    if(on_off.shortAddr === actuator.shortAddr){
+                        if(on_off.endPoint === actuator.endPoint){
+                            return true;
+                        }
+                    }
+                    return false;
+                });
+                if(idx > -1){
+                    const on_off_del = this.on_off_all.splice(idx, 1)[0];
+                    this.on_off_used.push(on_off_del);
+                }
+            }
+            nvThermostat.actuators = [];
+            for(const on_off of this.on_off_used){
+                const thermostatActuator = {} as gIF.thermostatActuator_t;
+                thermostatActuator.name = on_off.name;
+                thermostatActuator.shortAddr = on_off.shortAddr;
+                thermostatActuator.endPoint = on_off.endPoint;
+                nvThermostat.actuators.push(thermostatActuator);
+            }
+        }
+        for(let i = this.on_off_used.length; i < 6; i++){
+            let on_off = {} as gIF.on_off_server_t;
+            on_off.valid = false;
+            on_off.name = EMPTY_NAME;
+            this.on_off_used.push(on_off);
+        }
+        for(let i = this.on_off_all.length; i < 12; i++){
+            let on_off = {} as gIF.on_off_server_t;
+            on_off.valid = false;
+            on_off.name = EMPTY_NAME;
+            this.on_off_all.push(on_off);
+        }
+    }
+
+    /***********************************************************************************************
+     * fn          setBinds
+     *
+     * brief
+     *
+     *
     public setBinds(bindSrc: gIF.hostedBinds_t){
 
         this.usedBindDst = [];
@@ -174,20 +266,20 @@ export class EditStats implements AfterViewInit {
             this.freeBindDst.push(bind);
         }
     }
-
+    */
     /***********************************************************************************************
-     * fn          bindSrcSelected
+     * fn          thermostatSelected
      *
      * brief
      *
      */
-    public bindSrcSelected(event: MatSelectChange){
+    public thermostatSelected(event: MatSelectChange){
 
-        this.nameFormCtrl.setValue(this.bindSrc.name);
-        this.setBindSourceDesc(this.bindSrc);
+        this.nameFormCtrl.setValue(this.selThermostat.name);
+        this.setThermostatDesc(this.selThermostat);
 
         this.ngZone.run(()=>{
-            this.setBinds(this.bindSrc);
+            this.setThermostat(this.selThermostat);
         });
     }
 
@@ -197,23 +289,23 @@ export class EditStats implements AfterViewInit {
      * brief
      *
      */
-    public setBindSourceDesc(srcBind: gIF.hostedBinds_t){
+    public setThermostatDesc(thermostat: gIF.thermostat_t){
 
-        this.bindSourceDesc = [];
-        let partDesc: gIF.part_t = this.dlgData.partMap.get(srcBind.partNum);
+        this.thermostatDesc = [];
+        let partDesc: gIF.part_t = this.dlgData.partMap.get(thermostat.partNum);
         if(partDesc){
             let descVal = {} as gIF.descVal_t;
             descVal.key = 'S/N:';
-            descVal.value = this.utils.extToHex(srcBind.extAddr);
-            this.bindSourceDesc.push(descVal);
+            descVal.value = this.utils.extToHex(thermostat.extAddr);
+            this.thermostatDesc.push(descVal);
             descVal = {} as gIF.descVal_t;
             descVal.key = 'node-name:';
             descVal.value = partDesc.devName;
-            this.bindSourceDesc.push(descVal);
+            this.thermostatDesc.push(descVal);
             descVal = {} as gIF.descVal_t;
             descVal.key = 'label:';
             descVal.value = partDesc.part;
-            this.bindSourceDesc.push(descVal);
+            this.thermostatDesc.push(descVal);
         }
     }
 
@@ -244,25 +336,25 @@ export class EditStats implements AfterViewInit {
      *
      * brief
      *
-     */
+     *
     public wrSrcBinds(){
         if(this.bindSrc){
             this.serial.wrBinds(JSON.stringify(this.bindSrc));
         }
     }
-
+    */
     /***********************************************************************************************
      * fn          wrBindLoc
      *
      * brief
      *
-     */
+     *
     async wrBindName() {
         this.bindSrc.name = this.nameFormCtrl.value;
         await this.storage.setBindsName(this.nameFormCtrl.value,
                                         this.bindSrc);
     }
-
+    */
     /***********************************************************************************************
      * fn          close
      *

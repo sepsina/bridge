@@ -13,18 +13,18 @@
 <div class="bind-container">
     <div class="src-binds-container">
         <div class="src-binds-header">
-            Source Binds
+            Sensors
         </div>
         <mat-select class="src-binds-sel"
-                    [(value)]="bindSrc"
-                    (selectionChange)="bindSrcSelected($event)">
-            <mat-option *ngFor="let bind of allBindSrc"
-                        [value]="bind">
-                {{bind.name}}
+                    [(value)]="selThermostat"
+                    (selectionChange)="thermostatSelected($event)">
+            <mat-option *ngFor="let thermostat of thermostats"
+                        [value]="thermostat">
+                {{thermostat.name}}
             </mat-option>
         </mat-select>
         <div class="source-bind-desc">
-            <div *ngFor="let desc of bindSourceDesc">
+            <div *ngFor="let desc of thermostatDesc">
                 <span class="desc-label">{{desc.key}}</span><span class="desc-value">{{desc.value}}</span>
             </div>
         </div>

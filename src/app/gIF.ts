@@ -243,6 +243,30 @@ export interface workerCmd_t {
     cmd: any;
 }
 
+export interface thermostatActuator_t {
+    name: string;
+    shortAddr: number;
+    endPoint: number;
+}
+
+export interface thermostat_t {
+    name: string;
+    partNum: number;
+    extAddr: number;
+    shortAddr: number;
+    endPoint: number;
+    actuators: thermostatActuator_t[];
+}
+
+export interface on_off_server_t {
+    valid: boolean
+    name: string;
+    partNum: number;
+    extAddr: number;
+    shortAddr: number;
+    endPoint: number;
+}
+
 
 
 
